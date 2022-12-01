@@ -2,10 +2,10 @@ set(LIB_NAME Day1)
 
 aux_source_directory(. SRC_FILES)
 
-add_executable(${LIB_NAME} ${SRC_FILES})
+add_library(${LIB_NAME} STATIC ${SRC_FILES})
 
 target_include_directories(${LIB_NAME} INTERFACE .)
 
-target_link_libraries(${LIB_NAME} PRIVATE gtest gmock gmock_main)
+target_link_libraries(${LIB_NAME} PUBLIC Helpers)
 
-add_test(NAME ${LIB_NAME} COMMAND ${LIB_NAME})
+add_subdirectory(test)
