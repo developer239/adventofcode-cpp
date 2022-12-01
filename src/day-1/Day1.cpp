@@ -41,8 +41,6 @@ int countCaloriesPart1() {
   // TODO: pass from arguments
   auto lines = readInput("../../../src/day-1/input.txt");
 
-  std::cout << " " << std::endl;
-
   std::vector<int> sums = {0};
 
   for (auto line : lines) {
@@ -58,7 +56,7 @@ int countCaloriesPart1() {
       sums.begin(),
       sums.begin() + 2,
       sums.end(),
-      std::greater<int>()
+      std::greater()
   );
 
   return sums[0] + sums[1] + sums[2];
