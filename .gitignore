@@ -1,0 +1,5 @@
+/.idea
+/externals/googletest
+
+# Project exclude paths
+/cmake-build-debug/
