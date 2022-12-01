@@ -1,11 +1,17 @@
-set(LIB_NAME Day1)
+set(APP_NAME Day1)
+set(APP_NAME_TEST Day1Test)
+set(APP_FOLDER_NAME day-1)
 
-aux_source_directory(. SRC_FILES)
+set(SOURCES ./main.cpp)
 
-add_library(${LIB_NAME} STATIC ${SRC_FILES})
+add_executable(${APP_NAME} ${SOURCES})
 
-target_include_directories(${LIB_NAME} INTERFACE .)
+file(COPY assets DESTINATION ${CMAKE_BINARY_DIR}/src/${APP_FOLDER_NAME})
 
-target_link_libraries(${LIB_NAME} PUBLIC Helpers)
+target_link_libraries(${APP_NAME} PRIVATE Helpers)
 
-add_subdirectory(test)
+# Tests
+
+set(SOURCES_TEST ./test.cpp)
+add_executable(${APP_NAME_TEST} ${SOURCES_TEST})
+target_link_libraries(${APP_NAME_TEST} PRIVATE gtest gmock gmock_main Helpers)

@@ -5,6 +5,12 @@
 
 std::vector<std::optional<int>> ReadInput(const std::string& filename) {
   std::ifstream file(filename);
+
+  if (!file.is_open()) {
+    std::cout << "Could not open file: " << filename << std::endl;
+    exit(1);
+  }
+
   std::vector<std::optional<int>> input;
   std::string line;
 
