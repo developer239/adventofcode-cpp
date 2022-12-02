@@ -79,3 +79,71 @@ int runPart1(const std::string& filename) {
 
   return score;
 }
+
+typedef enum {
+  lose = 'L',
+  draw = 'D',
+  win = 'W',
+} RoundEndChoice;
+
+std::unordered_map<char, RoundEndChoice> inputToRoundEndChoice = {
+    {'X', lose},
+    {'Y', draw},
+    {'Z', win},
+};
+
+ChoiceType findChoice(RoundEndChoice roundEndChoice, ChoiceType opponentChoice) {
+  switch (roundEndChoice) {
+    case lose:
+      switch (opponentChoice) {
+        case rock:
+          return scissors;
+        case paper:
+          return rock;
+        case scissors:
+          return paper;
+      }
+      break;
+    case draw:
+      switch (opponentChoice) {
+        case rock:
+          return rock;
+        case paper:
+          return paper;
+        case scissors:
+          return scissors;
+      }
+      break;
+    case win:
+      switch (opponentChoice) {
+        case rock:
+          return paper;
+        case paper:
+          return scissors;
+        case scissors:
+          return rock;
+      }
+      break;
+  }
+}
+
+int runPart2(const std::string& filename) {
+  auto lines = ReadInput<std::string>(filename);
+
+  int score = 0;
+  for (auto line : lines) {
+    if (line.has_value()) {
+      RoundEndChoice roundEndChoice = inputToRoundEndChoice[line.value()[2]];
+
+      ChoiceType opponentChoice = inputToChoiceType[line.value()[0]];
+      ChoiceType yourChoice = findChoice(roundEndChoice, opponentChoice);
+
+      auto playScore = calculatePlayScore(yourChoice, opponentChoice);
+      auto choiceScore = calculateChoiceScore(yourChoice);
+
+      score += playScore + choiceScore;
+    }
+  }
+
+  return score;
+}
