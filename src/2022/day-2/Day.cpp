@@ -4,9 +4,15 @@
 #include "src/LogVectorLines.cpp"
 #include "src/ReadInput.cpp"
 
-typedef enum { rock = 0, paper = 1, scissors = 2 } ChoiceType;
+typedef enum {
+  lose = 0,
+  draw = 1,
+  win = 2,
+} GameResult;
 
-std::unordered_map<char, ChoiceType> inputToChoiceType = {
+typedef enum { rock = 0, paper = 1, scissors = 2 } Choice;
+
+std::unordered_map<char, Choice> inputToChoice = {
     {'X', rock},
     {'A', rock},
     {'Y', paper},
@@ -15,25 +21,16 @@ std::unordered_map<char, ChoiceType> inputToChoiceType = {
     {'C', scissors},
 };
 
-int calculateChoiceScore(ChoiceType yourChoice) {
-  switch (yourChoice) {
-    case rock:
-      return 1;
-    case paper:
-      return 2;
-    case scissors:
-      return 3;
-  }
-}
+int calculateChoiceScore(Choice yourChoice) { return yourChoice + 1; }
 
-int calculatePlayScore(ChoiceType yourChoice, ChoiceType opponentChoice) {
-  std::vector<std::vector<int>> scores {
-      {3, 0, 6},
-      {6, 3, 0},
-      {0, 6, 3},
+int calculatePlayScore(Choice yourChoice, Choice opponentChoice) {
+  std::vector<std::vector<int>> scores{
+      {draw, lose, win},  // rock against {rock, paper, scissors}
+      {win, draw, lose},  // paper against {rock, paper, scissors}
+      {lose, win, draw},  // scissors against {rock, paper, scissors}
   };
 
-  return scores[yourChoice][opponentChoice];
+  return scores[yourChoice][opponentChoice] * 3;
 }
 
 int runPart1(const std::string& filename) {
@@ -42,8 +39,8 @@ int runPart1(const std::string& filename) {
   int score = 0;
   for (auto line : lines) {
     if (line.has_value()) {
-      ChoiceType yourChoice = inputToChoiceType[line.value()[2]];
-      ChoiceType opponentChoice = inputToChoiceType[line.value()[0]];
+      Choice yourChoice = inputToChoice[line.value()[2]];
+      Choice opponentChoice = inputToChoice[line.value()[0]];
 
       auto playScore = calculatePlayScore(yourChoice, opponentChoice);
       auto choiceScore = calculateChoiceScore(yourChoice);
@@ -55,26 +52,20 @@ int runPart1(const std::string& filename) {
   return score;
 }
 
-typedef enum {
-  lose = 0,
-  draw = 1,
-  win = 2,
-} RoundEndChoice;
-
-std::unordered_map<char, RoundEndChoice> inputToRoundEndChoice = {
+std::unordered_map<char, GameResult> inputToRoundEndChoice = {
     {'X', lose},
     {'Y', draw},
     {'Z', win},
 };
 
-ChoiceType findChoice(RoundEndChoice roundEndChoice, ChoiceType opponentChoice) {
-  std::vector<std::vector<int>> choices {
-      {2, 0, 1}, // win
-      {0, 1, 2}, // draw
-      {1, 2, 0}, // lose
+Choice findChoice(GameResult roundEndChoice, Choice opponentChoice) {
+  std::vector<std::vector<int>> choices{
+      {scissors, rock, paper},  // want to lose against {rock, paper, scissors}
+      {rock, paper, scissors},  // want to draw against {rock, paper, scissors}
+      {paper, scissors, rock},  // want to win against {rock, paper, scissors}
   };
 
-  return static_cast<ChoiceType>(choices[roundEndChoice][opponentChoice]);
+  return static_cast<Choice>(choices[roundEndChoice][opponentChoice]);
 }
 
 int runPart2(const std::string& filename) {
@@ -83,10 +74,10 @@ int runPart2(const std::string& filename) {
   int score = 0;
   for (auto line : lines) {
     if (line.has_value()) {
-      RoundEndChoice roundEndChoice = inputToRoundEndChoice[line.value()[2]];
+      GameResult roundEndChoice = inputToRoundEndChoice[line.value()[2]];
 
-      ChoiceType opponentChoice = inputToChoiceType[line.value()[0]];
-      ChoiceType yourChoice = findChoice(roundEndChoice, opponentChoice);
+      Choice opponentChoice = inputToChoice[line.value()[0]];
+      Choice yourChoice = findChoice(roundEndChoice, opponentChoice);
 
       auto playScore = calculatePlayScore(yourChoice, opponentChoice);
       auto choiceScore = calculateChoiceScore(yourChoice);
