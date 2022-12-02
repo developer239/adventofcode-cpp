@@ -1,8 +1,8 @@
 # TODO: create cmake function for all of this
 
-set(APP_NAME Day1)
-set(APP_NAME_TEST Day1Test)
-set(APP_FOLDER_NAME day-1)
+set(APP_NAME Day2)
+set(APP_NAME_TEST Day2Test)
+set(APP_FOLDER_NAME day-2)
 
 set(SOURCES main.cpp)
 

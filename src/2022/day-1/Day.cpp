@@ -1,9 +1,10 @@
 #include <vector>
 
 #include "src/ReadInput.cpp"
+#include "src/LogVectorLines.cpp"
 
-int countCaloriesPart1(const std::string& filename) {
-  auto lines = ReadInput(filename);
+int runPart1(const std::string& filename) {
+  auto lines = ReadInput<int>(filename);
 
   std::vector<int> sums = {0};
 
@@ -19,8 +20,8 @@ int countCaloriesPart1(const std::string& filename) {
   return *std::max_element(sums.begin(), sums.end());
 }
 
-int countCaloriesPart2(const std::string& filename) {
-  auto lines = ReadInput(filename);
+int runPart2(const std::string& filename) {
+  auto lines = ReadInput<int>(filename);
 
   std::vector<int> sums = {0};
 
