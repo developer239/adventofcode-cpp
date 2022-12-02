@@ -1,2 +1,2 @@
 add_subdirectory(_helpers)
-add_subdirectory(day-1)
+add_subdirectory(2022)
