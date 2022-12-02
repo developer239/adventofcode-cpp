@@ -56,9 +56,9 @@ int runPart1(const std::string& filename) {
 }
 
 typedef enum {
-  lose = 'L',
-  draw = 'D',
-  win = 'W',
+  lose = 0,
+  draw = 1,
+  win = 2,
 } RoundEndChoice;
 
 std::unordered_map<char, RoundEndChoice> inputToRoundEndChoice = {
@@ -68,38 +68,13 @@ std::unordered_map<char, RoundEndChoice> inputToRoundEndChoice = {
 };
 
 ChoiceType findChoice(RoundEndChoice roundEndChoice, ChoiceType opponentChoice) {
-  switch (roundEndChoice) {
-    case lose:
-      switch (opponentChoice) {
-        case rock:
-          return scissors;
-        case paper:
-          return rock;
-        case scissors:
-          return paper;
-      }
-      break;
-    case draw:
-      switch (opponentChoice) {
-        case rock:
-          return rock;
-        case paper:
-          return paper;
-        case scissors:
-          return scissors;
-      }
-      break;
-    case win:
-      switch (opponentChoice) {
-        case rock:
-          return paper;
-        case paper:
-          return scissors;
-        case scissors:
-          return rock;
-      }
-      break;
-  }
+  std::vector<std::vector<int>> choices {
+      {2, 0, 1}, // win
+      {0, 1, 2}, // draw
+      {1, 2, 0}, // lose
+  };
+
+  return static_cast<ChoiceType>(choices[roundEndChoice][opponentChoice]);
 }
 
 int runPart2(const std::string& filename) {
