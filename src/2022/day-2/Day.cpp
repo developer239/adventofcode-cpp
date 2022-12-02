@@ -4,7 +4,7 @@
 #include "src/LogVectorLines.cpp"
 #include "src/ReadInput.cpp"
 
-typedef enum { rock = 'R', paper = 'P', scissors = 'S' } ChoiceType;
+typedef enum { rock = 0, paper = 1, scissors = 2 } ChoiceType;
 
 std::unordered_map<char, ChoiceType> inputToChoiceType = {
     {'X', rock},
@@ -27,38 +27,13 @@ int calculateChoiceScore(ChoiceType yourChoice) {
 }
 
 int calculatePlayScore(ChoiceType yourChoice, ChoiceType opponentChoice) {
-  switch (yourChoice) {
-    case rock:
-      switch (opponentChoice) {
-        case rock:
-          return 3;
-        case paper:
-          return 0;
-        case scissors:
-          return 6;
-      }
-      break;
-    case paper:
-      switch (opponentChoice) {
-        case rock:
-          return 6;
-        case paper:
-          return 3;
-        case scissors:
-          return 0;
-      }
-      break;
-    case scissors:
-      switch (opponentChoice) {
-        case rock:
-          return 0;
-        case paper:
-          return 6;
-        case scissors:
-          return 3;
-      }
-      break;
-  }
+  std::vector<std::vector<int>> scores {
+      {3, 0, 6},
+      {6, 3, 0},
+      {0, 6, 3},
+  };
+
+  return scores[yourChoice][opponentChoice];
 }
 
 int runPart1(const std::string& filename) {
