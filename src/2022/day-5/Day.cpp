@@ -41,7 +41,7 @@ Metadata ParseInput(std::vector<std::optional<std::string>> lines) {
 
     columnIndex++;
     columnPosition += spaceBetween;
-    isColumnAtIndex = columnPosition <= lines[stackHeight].value().size();
+    isColumnAtIndex = columnPosition < lines[stackHeight].value().size();
   }
 
   // add + 1 for index + 1 for the empty line
