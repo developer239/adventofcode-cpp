@@ -4,6 +4,6 @@
 
 // TODO: rename to TestDay5
 TEST(TestDay05, SuccessCase) {
-  EXPECT_EQ("MCD", runPart1("./assets/input.txt"));
-//  EXPECT_EQ(4, runPart2("./assets/input-example.txt"));
+  EXPECT_EQ("CMZ", runPart1("./assets/input-example.txt"));
+  EXPECT_EQ("MCD", runPart2("./assets/input-example.txt"));
 }
