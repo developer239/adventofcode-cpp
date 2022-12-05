@@ -5,27 +5,20 @@
 
 std::vector<std::pair<int, int>> lineToRanges(std::optional<std::string>& line
 ) {
-  std::__1::vector<std::pair<int, int>> ranges = {};
-  std::string range;
+  int leftStart, leftEnd, rightStart, rightEnd;
+  sscanf(
+      line.value().c_str(),
+      "%d-%d,%d-%d",
+      &leftStart,
+      &leftEnd,
+      &rightStart,
+      &rightEnd
+  );
 
-  for (int index = 0; index < line->size(); index++) {
-    auto letter = line.value()[index];
+  std::vector<std::pair<int, int>> ranges = {
+      {leftStart, leftEnd},
+      {rightStart, rightEnd}};
 
-    auto isMiddle = letter == ',';
-    auto isEnd = index == line->size() - 1;
-
-    if (!isMiddle) {
-      range += letter;
-    }
-
-    if (isMiddle || isEnd) {
-      int dashIndex = range.find('-');
-      int start = std::stoi(range.substr(0, dashIndex));
-      int end = std::stoi(range.substr(dashIndex + 1));
-      ranges.push_back(std::make_pair(start, end));
-      range = "";
-    }
-  }
   return ranges;
 }
 
