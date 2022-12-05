@@ -3,6 +3,32 @@
 #include "src/LogVectorLines.cpp"
 #include "src/ReadInput.cpp"
 
+std::vector<std::pair<int, int>> lineToRanges(std::optional<std::string>& line
+) {
+  std::__1::vector<std::pair<int, int>> ranges = {};
+  std::string range;
+
+  for (int index = 0; index < line->size(); index++) {
+    auto letter = line.value()[index];
+
+    auto isMiddle = letter == ',';
+    auto isEnd = index == line->size() - 1;
+
+    if (!isMiddle) {
+      range += letter;
+    }
+
+    if (isMiddle || isEnd) {
+      int dashIndex = range.find('-');
+      int start = std::stoi(range.substr(0, dashIndex));
+      int end = std::stoi(range.substr(dashIndex + 1));
+      ranges.push_back(std::make_pair(start, end));
+      range = "";
+    }
+  }
+  return ranges;
+}
+
 int runPart1(const std::string& filename) {
   auto lines = ReadInput<std::string>(filename);
 
@@ -12,27 +38,7 @@ int runPart1(const std::string& filename) {
     auto line = lines[lineIndex];
 
     if (line.has_value()) {
-      std::vector<std::pair<int, int>> ranges = {};
-      std::string range;
-
-      for (int index = 0; index < line->size(); index++) {
-        auto letter = line.value()[index];
-
-        auto isMiddle = letter == ',';
-        auto isEnd = index == line->size() - 1;
-
-        if (!isMiddle) {
-          range += letter;
-        }
-
-        if (isMiddle || isEnd) {
-          int dashIndex = range.find('-');
-          int start = std::stoi(range.substr(0, dashIndex));
-          int end = std::stoi(range.substr(dashIndex + 1));
-          ranges.push_back(std::make_pair(start, end));
-          range = "";
-        }
-      }
+      std::vector<std::pair<int, int>> ranges = lineToRanges(line);
 
       auto firstRange = ranges[0];
       auto secondRange = ranges[1];
@@ -58,27 +64,7 @@ int runPart2(const std::string& filename) {
     auto line = lines[lineIndex];
 
     if (line.has_value()) {
-      std::vector<std::pair<int, int>> ranges = {};
-      std::string range;
-
-      for (int index = 0; index < line->size(); index++) {
-        auto letter = line.value()[index];
-
-        auto isMiddle = letter == ',';
-        auto isEnd = index == line->size() - 1;
-
-        if (!isMiddle) {
-          range += letter;
-        }
-
-        if (isMiddle || isEnd) {
-          int dashIndex = range.find('-');
-          int start = std::stoi(range.substr(0, dashIndex));
-          int end = std::stoi(range.substr(dashIndex + 1));
-          ranges.push_back(std::make_pair(start, end));
-          range = "";
-        }
-      }
+      std::vector<std::pair<int, int>> ranges = lineToRanges(line);
 
       auto leftStart = ranges[0].first;
       auto leftEnd = ranges[0].second;
