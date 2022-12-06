@@ -16,6 +16,7 @@ function(initialize_library library_name library_folder)
     set(SOURCES main.cpp)
 
     add_executable(${APP_NAME} ${SOURCES})
+    add_test(AllTests${APP_NAME} ${APP_NAME})
 
     file(COPY assets DESTINATION ${CMAKE_BINARY_DIR}/src/2022/${APP_FOLDER_NAME})
 
