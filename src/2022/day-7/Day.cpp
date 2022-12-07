@@ -4,6 +4,7 @@
 #include "src/LogVectorLines.cpp"
 #include "src/ReadInput.cpp"
 
+// TODO: move to helpers library
 std::vector<std::string> tokenize(
     const std::string& str, const std::string& delimiters
 ) {
@@ -32,6 +33,7 @@ std::vector<std::string> tokenize(
   return tokens;
 }
 
+// TODO: generalize? and move to helpers library
 enum class NodeType {
   File,
   Folder,
@@ -77,6 +79,7 @@ int runPart1(const std::string& filename) {
   auto lines = ReadInput<std::string>(filename);
 
   std::shared_ptr<Node> fileSystem;
+  std::vector<std::shared_ptr<Node>> foldersFlat;
 
   for (int lineIndex = 0; lineIndex < lines.size(); lineIndex++) {
     auto line = lines[lineIndex];
@@ -126,6 +129,7 @@ int runPart1(const std::string& filename) {
               auto child =
                   std::make_shared<Node>(NodeType::Folder, name, fileSystem, 0);
               fileSystem->addChild(child);
+              foldersFlat.push_back(child);
             }
             // if file
             else {
@@ -141,7 +145,16 @@ int runPart1(const std::string& filename) {
               );
               fileSystem->addChild(child);
 
-
+              // Add size to parent
+              auto tempNode = fileSystem;
+              // Add size to all parents
+              while (tempNode->parent != nullptr) {
+                // is likely always true
+                if(tempNode->type == NodeType::Folder) {
+                  tempNode->size += size;
+                }
+                tempNode = tempNode->parent;
+              }
             }
 
             lineIndex++;
@@ -157,5 +170,12 @@ int runPart1(const std::string& filename) {
     fileSystem = fileSystem->parent;
   }
 
-  return 99;
+  int sumSize = 0;
+  for(const auto& folder : foldersFlat) {
+    if(folder->size < 100000) {
+      sumSize += folder->size;
+    }
+  }
+
+  return sumSize;
 }
