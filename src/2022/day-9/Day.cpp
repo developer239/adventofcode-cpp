@@ -31,26 +31,26 @@ enum Direction {
   Right,
 };
 
-struct Move {
+struct Movement {
   Direction direction;
   int distance;
 };
 
-Move entryToMove(const std::string& entry) {
+Movement entryToMovement(const std::string& entry) {
   if (entry.starts_with("U")) {
-    return Move{Down, std::stoi(entry.substr(1))};
+    return Movement{Down, std::stoi(entry.substr(1))};
   }
 
   if (entry.starts_with("D")) {
-    return Move{Up, std::stoi(entry.substr(1))};
+    return Movement{Up, std::stoi(entry.substr(1))};
   }
 
   if (entry.starts_with("L")) {
-    return Move{Left, std::stoi(entry.substr(1))};
+    return Movement{Left, std::stoi(entry.substr(1))};
   }
 
   if (entry.starts_with("R")) {
-    return Move{Right, std::stoi(entry.substr(1))};
+    return Movement{Right, std::stoi(entry.substr(1))};
   }
 
   throw std::runtime_error("Invalid move entry");
@@ -71,98 +71,137 @@ int calculateDistance(const Position& head, const Position& tail) {
   }
 }
 
+class Node {
+ public:
+  std::shared_ptr<Node> prev;
+  std::shared_ptr<Node> next;
+  Position position;
+  char label;
+
+  Node(Position position, char label) {
+    this->position = position;
+    this->label = label;
+  }
+
+  void move(const Movement& movement, std::vector<std::vector<int>>& bridge) {
+    int movedCount = 0;
+
+    while (movedCount < movement.distance) {
+      switch (movement.direction) {
+        case Up:
+          this->position.row--;
+          break;
+        case Down:
+          this->position.row++;
+          break;
+        case Left:
+          this->position.col--;
+          break;
+        case Right:
+          this->position.col++;
+          break;
+      }
+
+      moveChildren(movement, bridge);
+      movedCount++;
+    }
+  }
+
+  void moveChildren(const Movement& movement, std::vector<std::vector<int>>& bridge) {
+    auto parentNode = this;
+    auto childNode = this->next;
+
+    while (childNode != nullptr) {
+      if (calculateDistance(parentNode->position, childNode->position) > 1) {
+        // if was diagonal move
+        if (parentNode->position.row != childNode->position.row && parentNode->position.col != childNode->position.col) {
+          // if was diagonal move up
+          if (parentNode->position.row > childNode->position.row) {
+            childNode->position.row++;
+          } else {
+            childNode->position.row--;
+          }
+
+          // if was diagonal move left
+          if (parentNode->position.col > childNode->position.col) {
+            childNode->position.col++;
+          } else {
+            childNode->position.col--;
+          }
+        } else {
+          // if was vertical move
+          if (parentNode->position.row != childNode->position.row) {
+            // if was vertical move up
+            if (parentNode->position.row > childNode->position.row) {
+              childNode->position.row++;
+            } else {
+              childNode->position.row--;
+            }
+          } else {
+            // if was horizontal move left
+            if (parentNode->position.col > childNode->position.col) {
+              childNode->position.col++;
+            } else {
+              childNode->position.col--;
+            }
+          }
+        }
+
+        if(childNode->isTail()) {
+          bridge[childNode->position.row][childNode->position.col] = 1;
+        }
+      }
+
+      childNode = childNode->next;
+    }
+  }
+
+  void append(const std::shared_ptr<Node>& node) {
+    this->next = node;
+    node->prev = std::make_shared<Node>(*this);
+  }
+
+  bool isHead() { return prev == nullptr; }
+
+  bool isTail() { return next == nullptr; }
+};
+
 void bridgeToASCII(
-    const std::vector<std::vector<int>>& bridge, const Position& head,
-    const Position& tail
+    const std::vector<std::vector<int>>& bridge, const Node& head
 ) {
   auto flippedBridge = bridge;
   std::reverse(flippedBridge.begin(), flippedBridge.end());
-  auto flippedHeadPosition =
-      Position{static_cast<int>(flippedBridge.size() - head.row - 1), head.col};
-  auto flippedTailPosition =
-      Position{static_cast<int>(flippedBridge.size() - tail.row - 1), tail.col};
 
   for (int row = 0; row < flippedBridge.size(); row++) {
     for (int col = 0; col < flippedBridge[row].size(); col++) {
-      if (row == flippedHeadPosition.row && col == flippedHeadPosition.col) {
-        std::cout << "H";
-      } else if (row == flippedTailPosition.row && col == flippedTailPosition.col) {
-        std::cout << "T";
-      } else if (flippedBridge[row][col] == 1) {
+      std::shared_ptr<Node> headTemp = std::make_shared<Node>(head);
+      bool shouldSkip = false;
+
+      while (headTemp != nullptr) {
+        auto flippedHeadTempPosition = Position{
+            static_cast<int>(flippedBridge.size() - headTemp->position.row - 1),
+            headTemp->position.col};
+        if (flippedHeadTempPosition.row == row &&
+            flippedHeadTempPosition.col == col) {
+          std::cout << headTemp->label;
+          shouldSkip = true;
+          break;
+        }
+
+        headTemp = headTemp->next;
+      }
+
+      if (shouldSkip) {
+        continue;
+      }
+
+      if (flippedBridge[row][col] == 1) {
         std::cout << "#";
       } else {
         std::cout << ".";
       }
     }
     std::cout << std::endl;
-  }
-}
-
-void moveTail(
-    Position& tail, std::vector<Position>& route,
-    std::vector<std::vector<int>>& bridge
-) {
-  for (auto position : route) {
-    if (calculateDistance(position, tail) > 1) {
-      // if was diagonal move
-      if (position.row != tail.row && position.col != tail.col) {
-        // if was diagonal move up
-        if (position.row > tail.row) {
-          tail.row++;
-        } else {
-          tail.row--;
-        }
-
-        // if was diagonal move left
-        if (position.col > tail.col) {
-          tail.col++;
-        } else {
-          tail.col--;
-        }
-      } else {
-        // if was vertical move
-        if (position.row != tail.row) {
-          // if was vertical move up
-          if (position.row > tail.row) {
-            tail.row++;
-          } else {
-            tail.row--;
-          }
-        } else {
-          // if was horizontal move left
-          if (position.col > tail.col) {
-            tail.col++;
-          } else {
-            tail.col--;
-          }
-        }
-      }
-      bridge[tail.row][tail.col] = 1;
-    }
-  }
-}
-
-void moveHead(Position& head, const Move& move, std::vector<Position>& route) {
-  int movedCount = 0;
-
-  while (movedCount < move.distance) {
-    switch (move.direction) {
-      case Up:
-        head.row--;
-        break;
-      case Down:
-        head.row++;
-        break;
-      case Left:
-        head.col--;
-        break;
-      case Right:
-        head.col++;
-        break;
-    }
-
-    route.push_back(head);
-    movedCount++;
   }
 }
 
@@ -179,11 +218,12 @@ int runPart1(const std::string& filename) {
       std::vector<int>(bridgeSize, 0)
   );
 
-  auto head = Position{bridgeCenter, bridgeCenter};
-  auto tail = Position{bridgeCenter, bridgeCenter};
+  auto head = Node(Position{bridgeCenter, bridgeCenter}, 'H');
+  head.append(std::make_shared<Node>(Position{bridgeCenter, bridgeCenter}, 'T')
+  );
 
   // mark starting position
-  bridge[tail.row][tail.col] = 1;
+  bridge[head.position.row][head.position.col] = 1;
 
   std::vector<Position> headRoute;
 
@@ -193,13 +233,13 @@ int runPart1(const std::string& filename) {
     if (line.has_value()) {
       if (IS_EXAMPLE) {
         std::cout << "Line " << lineIndex << ": " << line.value() << std::endl;
-        bridgeToASCII(bridge, head, tail);
+        bridgeToASCII(bridge, head);
       }
       auto entry = line.value();
-      auto move = entryToMove(entry);
+      auto movement = entryToMovement(entry);
 
-      moveHead(head, move, headRoute);
-      moveTail(tail, headRoute, bridge);
+      head.move(movement, bridge);
+
       headRoute.clear();
     }
   }
