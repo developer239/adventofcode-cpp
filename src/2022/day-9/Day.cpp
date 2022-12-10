@@ -64,17 +64,19 @@ int calculateDistance(const Position& head, const Position& tail) {
     return std::abs(rowDistance);
   }
 
-  return std::abs(rowDistance) + std::abs(colDistance);
+  if (std::abs(rowDistance) > std::abs(colDistance)) {
+    return std::abs(rowDistance);
+  } else {
+    return std::abs(colDistance);
+  }
 }
 
 void bridgeToASCII(
     const std::vector<std::vector<int>>& bridge, const Position& head,
     const Position& tail
 ) {
-  // flip bridge vertically
   auto flippedBridge = bridge;
   std::reverse(flippedBridge.begin(), flippedBridge.end());
-
   auto flippedHeadPosition =
       Position{static_cast<int>(flippedBridge.size() - head.row - 1), head.col};
   auto flippedTailPosition =
@@ -97,24 +99,23 @@ void bridgeToASCII(
 }
 
 void moveTail(
-    Position& head, Position& prevHead, Position& tail,
+    Position& tail, Position& headStart, std::vector<Position>& route,
     std::vector<std::vector<int>>& bridge
 ) {
-  // is tail around head?
-  if (calculateDistance(head, tail) > 1) {
-    tail = prevHead;
-    bridge[tail.row][tail.col] = 1;
+  Position prevPosition = headStart;
+  for (auto position : route) {
+    if (calculateDistance(position, tail) > 1) {
+      tail = prevPosition;
+      bridge[tail.row][tail.col] = 1;
+    }
+    prevPosition = position;
   }
 }
 
-void moveHead(
-    Position& head, Position& tail, const Move& move,
-    std::vector<std::vector<int>>& bridge
-) {
+void moveHead(Position& head, const Move& move, std::vector<Position>& route) {
   int movedCount = 0;
 
   while (movedCount < move.distance) {
-    auto prevHead = head;
     switch (move.direction) {
       case Up:
         head.row--;
@@ -130,7 +131,7 @@ void moveHead(
         break;
     }
 
-    moveTail(head, prevHead, tail, bridge);
+    route.push_back(head);
     movedCount++;
   }
 }
@@ -138,23 +139,39 @@ void moveHead(
 int runPart1(const std::string& filename) {
   auto lines = ReadInput<std::string>(filename);
 
-  std::vector<std::vector<int>> bridge(1000, std::vector<int>(1000, 0));
+  bool IS_EXAMPLE = filename.find("example") != std::string::npos;
 
-  auto head = Position{500, 500};
-  auto tail = Position{500, 500};
+  int bridgeSize = IS_EXAMPLE ? 8 : 1000;
+  int bridgeCenter = IS_EXAMPLE ? 0 : bridgeSize / 2;
+
+  std::vector<std::vector<int>> bridge(
+      bridgeSize,
+      std::vector<int>(bridgeSize, 0)
+  );
+
+  auto head = Position{bridgeCenter, bridgeCenter};
+  auto tail = Position{bridgeCenter, bridgeCenter};
 
   // mark starting position
   bridge[tail.row][tail.col] = 1;
+
+  std::vector<Position> headRoute;
 
   for (int lineIndex = 0; lineIndex < lines.size(); lineIndex++) {
     auto line = lines[lineIndex];
 
     if (line.has_value()) {
-//      bridgeToASCII(bridge, head, tail);
+      if (IS_EXAMPLE) {
+        std::cout << "Line " << lineIndex << ": " << line.value() << std::endl;
+        bridgeToASCII(bridge, head, tail);
+      }
+      auto headStart = head;
       auto entry = line.value();
       auto move = entryToMove(entry);
 
-      moveHead(head, tail, move, bridge);
+      moveHead(head, move, headRoute);
+      moveTail(tail, headStart, headRoute, bridge);
+      headRoute.clear();
     }
   }
 
