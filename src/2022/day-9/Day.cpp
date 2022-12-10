@@ -99,16 +99,46 @@ void bridgeToASCII(
 }
 
 void moveTail(
-    Position& tail, Position& headStart, std::vector<Position>& route,
+    Position& tail, std::vector<Position>& route,
     std::vector<std::vector<int>>& bridge
 ) {
-  Position prevPosition = headStart;
   for (auto position : route) {
     if (calculateDistance(position, tail) > 1) {
-      tail = prevPosition;
+      // if was diagonal move
+      if (position.row != tail.row && position.col != tail.col) {
+        // if was diagonal move up
+        if (position.row > tail.row) {
+          tail.row++;
+        } else {
+          tail.row--;
+        }
+
+        // if was diagonal move left
+        if (position.col > tail.col) {
+          tail.col++;
+        } else {
+          tail.col--;
+        }
+      } else {
+        // if was vertical move
+        if (position.row != tail.row) {
+          // if was vertical move up
+          if (position.row > tail.row) {
+            tail.row++;
+          } else {
+            tail.row--;
+          }
+        } else {
+          // if was horizontal move left
+          if (position.col > tail.col) {
+            tail.col++;
+          } else {
+            tail.col--;
+          }
+        }
+      }
       bridge[tail.row][tail.col] = 1;
     }
-    prevPosition = position;
   }
 }
 
@@ -165,12 +195,11 @@ int runPart1(const std::string& filename) {
         std::cout << "Line " << lineIndex << ": " << line.value() << std::endl;
         bridgeToASCII(bridge, head, tail);
       }
-      auto headStart = head;
       auto entry = line.value();
       auto move = entryToMove(entry);
 
       moveHead(head, move, headRoute);
-      moveTail(tail, headStart, headRoute, bridge);
+      moveTail(tail, headRoute, bridge);
       headRoute.clear();
     }
   }
