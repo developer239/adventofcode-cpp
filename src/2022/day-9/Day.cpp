@@ -107,14 +107,17 @@ class Node {
     }
   }
 
-  void moveChildren(const Movement& movement, std::vector<std::vector<int>>& bridge) {
+  void moveChildren(
+      const Movement& movement, std::vector<std::vector<int>>& bridge
+  ) {
     auto parentNode = this;
     auto childNode = this->next;
 
     while (childNode != nullptr) {
       if (calculateDistance(parentNode->position, childNode->position) > 1) {
         // if was diagonal move
-        if (parentNode->position.row != childNode->position.row && parentNode->position.col != childNode->position.col) {
+        if (parentNode->position.row != childNode->position.row &&
+            parentNode->position.col != childNode->position.col) {
           // if was diagonal move up
           if (parentNode->position.row > childNode->position.row) {
             childNode->position.row++;
@@ -147,11 +150,12 @@ class Node {
           }
         }
 
-        if(childNode->isTail()) {
+        if (childNode->isTail()) {
           bridge[childNode->position.row][childNode->position.col] = 1;
         }
       }
 
+      parentNode = childNode.get();
       childNode = childNode->next;
     }
   }
@@ -167,14 +171,15 @@ class Node {
 };
 
 void bridgeToASCII(
-    const std::vector<std::vector<int>>& bridge, const Node& head
+    const std::vector<std::vector<int>>& bridge,
+    const std::shared_ptr<Node>& head
 ) {
   auto flippedBridge = bridge;
   std::reverse(flippedBridge.begin(), flippedBridge.end());
 
   for (int row = 0; row < flippedBridge.size(); row++) {
     for (int col = 0; col < flippedBridge[row].size(); col++) {
-      std::shared_ptr<Node> headTemp = std::make_shared<Node>(head);
+      std::shared_ptr<Node> headTemp = head;
       bool shouldSkip = false;
 
       while (headTemp != nullptr) {
@@ -218,12 +223,12 @@ int runPart1(const std::string& filename) {
       std::vector<int>(bridgeSize, 0)
   );
 
-  auto head = Node(Position{bridgeCenter, bridgeCenter}, 'H');
-  head.append(std::make_shared<Node>(Position{bridgeCenter, bridgeCenter}, 'T')
+  auto head = std::make_shared<Node>(Position{bridgeCenter, bridgeCenter}, 'H');
+  head->append(std::make_shared<Node>(Position{bridgeCenter, bridgeCenter}, 'T')
   );
 
   // mark starting position
-  bridge[head.position.row][head.position.col] = 1;
+  bridge[head->position.row][head->position.col] = 1;
 
   std::vector<Position> headRoute;
 
@@ -238,7 +243,81 @@ int runPart1(const std::string& filename) {
       auto entry = line.value();
       auto movement = entryToMovement(entry);
 
-      head.move(movement, bridge);
+      head->move(movement, bridge);
+
+      headRoute.clear();
+    }
+  }
+
+  int visitedCount = 0;
+  for (int row = 0; row < bridge.size(); row++) {
+    for (int col = 0; col < bridge[row].size(); col++) {
+      if (bridge[row][col] == 1) {
+        visitedCount++;
+      }
+    }
+  }
+
+  return visitedCount;
+}
+
+int runPart2(const std::string& filename) {
+  auto lines = ReadInput<std::string>(filename);
+
+  bool IS_EXAMPLE = filename.find("example") != std::string::npos;
+
+  int bridgeSize = IS_EXAMPLE ? 200 : 1000;
+  int bridgeCenter = IS_EXAMPLE ? 100 : bridgeSize / 2;
+
+  std::vector<std::vector<int>> bridge(
+      bridgeSize,
+      std::vector<int>(bridgeSize, 0)
+  );
+
+  auto head = std::make_shared<Node>(Position{bridgeCenter, bridgeCenter}, 'H');
+  head->append(std::make_shared<Node>(Position{bridgeCenter, bridgeCenter}, '1')
+  );
+  head->next->append(
+      std::make_shared<Node>(Position{bridgeCenter, bridgeCenter}, '2')
+  );
+  head->next->next->append(
+      std::make_shared<Node>(Position{bridgeCenter, bridgeCenter}, '3')
+  );
+  head->next->next->next->append(
+      std::make_shared<Node>(Position{bridgeCenter, bridgeCenter}, '4')
+  );
+  head->next->next->next->next->append(
+      std::make_shared<Node>(Position{bridgeCenter, bridgeCenter}, '5')
+  );
+  head->next->next->next->next->next->append(
+      std::make_shared<Node>(Position{bridgeCenter, bridgeCenter}, '6')
+  );
+  head->next->next->next->next->next->next->append(
+      std::make_shared<Node>(Position{bridgeCenter, bridgeCenter}, '7')
+  );
+  head->next->next->next->next->next->next->next->append(
+      std::make_shared<Node>(Position{bridgeCenter, bridgeCenter}, '8')
+  );
+  head->next->next->next->next->next->next->next->next->append(
+      std::make_shared<Node>(Position{bridgeCenter, bridgeCenter}, '9')
+  );
+
+  // mark starting position
+  bridge[head->position.row][head->position.col] = 1;
+
+  std::vector<Position> headRoute;
+
+  for (int lineIndex = 0; lineIndex < lines.size(); lineIndex++) {
+    auto line = lines[lineIndex];
+
+    if (line.has_value()) {
+      if (IS_EXAMPLE) {
+        std::cout << "Line " << lineIndex << ": " << line.value() << std::endl;
+      }
+      auto entry = line.value();
+      auto movement = entryToMovement(entry);
+
+      head->move(movement, bridge);
 
       headRoute.clear();
     }
