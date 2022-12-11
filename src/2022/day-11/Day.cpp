@@ -23,7 +23,7 @@ struct Operation {
 
 class Monkey {
  public:
-  int inspectedItemsCount = 0;
+  uint64_t inspectedItemsCount = 0;
   std::string name;
   std::vector<int> items = {};
   Operation operation = {
@@ -62,6 +62,22 @@ class Monkey {
       items.erase(items.begin());
 
       int newItem = std::floor(executeOperation(item) / 3);
+      inspectedItemsCount += 1;
+
+      if (newItem % testAction.divisibleBy == 0) {
+        testAction.positive->items.emplace_back(newItem);
+      } else {
+        testAction.negative->items.emplace_back(newItem);
+      }
+    }
+  }
+
+  void inspectItems2() {
+    while (!items.empty()) {
+      int item = items.front();
+      items.erase(items.begin());
+
+      int newItem = executeOperation(item);
       inspectedItemsCount += 1;
 
       if (newItem % testAction.divisibleBy == 0) {
@@ -189,12 +205,52 @@ int runPart1(const std::string& filename) {
     return a->inspectedItemsCount > b->inspectedItemsCount;
   });
 
-  std::cout << "Two most active monkeys inspected items: " << monkeys[0]->inspectedItemsCount << " and " << monkeys[1]->inspectedItemsCount << std::endl;
+  std::cout << "Two most active monkeys inspected items: "
+            << monkeys[0]->inspectedItemsCount << " and "
+            << monkeys[1]->inspectedItemsCount << std::endl;
 
   int levelOfMonkeyBusiness =
       monkeys[0]->inspectedItemsCount * monkeys[1]->inspectedItemsCount;
 
-  std::cout << "Level of monkey business: " << levelOfMonkeyBusiness << std::endl;
+  std::cout << "Level of monkey business: " << levelOfMonkeyBusiness
+            << std::endl;
+
+  return levelOfMonkeyBusiness;
+}
+
+void playRound2(std::vector<std::shared_ptr<Monkey>> monkeys) {
+  for (auto monkey : monkeys) {
+    monkey->inspectItems2();
+  }
+}
+
+int runPart2(const std::string& filename) {
+  auto lines = ReadInput<std::string>(filename);
+  auto monkeys = parseFileCreateMonkeys(lines);
+
+  for (int i = 0; i < 10000; i++) {
+    playRound2(monkeys);
+  }
+
+  for (auto monkey : monkeys) {
+    // log inspected count
+    std::cout << "Monkey " << monkey->name << " inspected items "
+              << monkey->inspectedItemsCount << " times." << std::endl;
+  }
+
+  std::sort(monkeys.begin(), monkeys.end(), [](const auto& a, const auto& b) {
+    return a->inspectedItemsCount > b->inspectedItemsCount;
+  });
+
+  std::cout << "Two most active monkeys inspected items: "
+            << monkeys[0]->inspectedItemsCount << " and "
+            << monkeys[1]->inspectedItemsCount << std::endl;
+
+  uint64_t levelOfMonkeyBusiness =
+      monkeys[0]->inspectedItemsCount * monkeys[1]->inspectedItemsCount;
+
+  std::cout << "Level of monkey business: " << levelOfMonkeyBusiness
+            << std::endl;
 
   return levelOfMonkeyBusiness;
 }
