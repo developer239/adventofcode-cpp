@@ -1,4 +1,5 @@
 #include <cmath>
+#include <numeric>
 #include <utility>
 
 #include "src/LogVectorLines.cpp"
@@ -8,7 +9,7 @@
 class Monkey;
 
 struct TestAction {
-  long divisibleBy;
+  int divisibleBy;
   std::shared_ptr<Monkey> positive;
   std::shared_ptr<Monkey> negative;
 };
@@ -23,9 +24,9 @@ struct Operation {
 
 class Monkey {
  public:
-  long inspectedItemsCount = 0;
+  int inspectedItemsCount = 0;
   std::string name;
-  std::vector<long> items = {};
+  std::vector<int> items = {};
   Operation operation = {
       .left = "",
       .right = "",
@@ -37,7 +38,7 @@ class Monkey {
       nullptr,
   };
 
-  long operationSideToInt(const std::string& side, long item) {
+  int operationSideToInt(const std::string& side, int item) {
     if (side == "old") {
       return item;
     }
@@ -45,7 +46,7 @@ class Monkey {
     return std::stoi(side);
   }
 
-  long executeOperation(long item) {
+  int executeOperation(int item) {
     switch (operation.op) {
       case Operator::Multiply:
         return operationSideToInt(operation.left, item) *
@@ -56,28 +57,20 @@ class Monkey {
     }
   }
 
-  void inspectItems() {
+  void inspectItems(std::optional<int> modulo = std::nullopt) {
     while (!items.empty()) {
-      long item = items.front();
+      int item = items.front();
       items.erase(items.begin());
 
-      long newItem = std::floor(executeOperation(item) / 3);
-      inspectedItemsCount += 1;
-
-      if (newItem % testAction.divisibleBy == 0) {
-        testAction.positive->items.emplace_back(newItem);
+      int newItem;
+      if (modulo) {
+        // Perform division and division check using modular arithmetic
+        newItem = executeOperation(item) % *modulo;
       } else {
-        testAction.negative->items.emplace_back(newItem);
+        // Perform division and division check using regular arithmetic
+        newItem = std::floor(executeOperation(item) / 3);
       }
-    }
-  }
 
-  void inspectItems2() {
-    while (!items.empty()) {
-      long item = items.front();
-      items.erase(items.begin());
-
-      long newItem = executeOperation(item);
       inspectedItemsCount += 1;
 
       if (newItem % testAction.divisibleBy == 0) {
@@ -151,7 +144,7 @@ std::vector<std::shared_ptr<Monkey>> parseFileCreateMonkeys(
   }
 
   // initialize throw to references
-  long monkeyIndex = 0;
+  int monkeyIndex = 0;
   for (auto line : lines) {
     if (!line.has_value()) {
       continue;
@@ -181,17 +174,20 @@ std::vector<std::shared_ptr<Monkey>> parseFileCreateMonkeys(
   return monkeys;
 }
 
-void playRound(std::vector<std::shared_ptr<Monkey>> monkeys) {
+void playRound(
+    std::vector<std::shared_ptr<Monkey>> monkeys,
+    std::optional<int> modulo = std::nullopt
+) {
   for (auto monkey : monkeys) {
-    monkey->inspectItems();
+    monkey->inspectItems(modulo);
   }
 }
 
-long runPart1(const std::string& filename) {
+int runPart1(const std::string& filename) {
   auto lines = ReadInput<std::string>(filename);
   auto monkeys = parseFileCreateMonkeys(lines);
 
-  for (long i = 0; i < 20; i++) {
+  for (int i = 0; i < 10000; i++) {
     playRound(monkeys);
   }
 
@@ -209,7 +205,7 @@ long runPart1(const std::string& filename) {
             << monkeys[0]->inspectedItemsCount << " and "
             << monkeys[1]->inspectedItemsCount << std::endl;
 
-  long levelOfMonkeyBusiness =
+  int levelOfMonkeyBusiness =
       monkeys[0]->inspectedItemsCount * monkeys[1]->inspectedItemsCount;
 
   std::cout << "Level of monkey business: " << levelOfMonkeyBusiness
@@ -218,18 +214,24 @@ long runPart1(const std::string& filename) {
   return levelOfMonkeyBusiness;
 }
 
-void playRound2(std::vector<std::shared_ptr<Monkey>> monkeys) {
-  for (auto monkey : monkeys) {
-    monkey->inspectItems2();
-  }
+int calculateModulus(const std::vector<std::shared_ptr<Monkey>> monkeys) {
+  return std::accumulate(
+      monkeys.begin(),
+      monkeys.end(),
+      1,
+      [](int mod, std::shared_ptr<Monkey> monkey) {
+        return mod * monkey->testAction.divisibleBy;
+      }
+  );
 }
 
-long runPart2(const std::string& filename) {
+int runPart2(const std::string& filename) {
   auto lines = ReadInput<std::string>(filename);
   auto monkeys = parseFileCreateMonkeys(lines);
 
-  for (long i = 0; i < 20; i++) {
-    playRound2(monkeys);
+  auto modulus = calculateModulus(monkeys);
+  for (int i = 0; i < 20; i++) {
+    playRound(monkeys, modulus);
   }
 
   for (auto monkey : monkeys) {
@@ -246,7 +248,7 @@ long runPart2(const std::string& filename) {
             << monkeys[0]->inspectedItemsCount << " and "
             << monkeys[1]->inspectedItemsCount << std::endl;
 
-  long levelOfMonkeyBusiness =
+  int levelOfMonkeyBusiness =
       monkeys[0]->inspectedItemsCount * monkeys[1]->inspectedItemsCount;
 
   std::cout << "Level of monkey business: " << levelOfMonkeyBusiness
