@@ -8,7 +8,7 @@
 class Monkey;
 
 struct TestAction {
-  int divisibleBy;
+  long divisibleBy;
   std::shared_ptr<Monkey> positive;
   std::shared_ptr<Monkey> negative;
 };
@@ -23,9 +23,9 @@ struct Operation {
 
 class Monkey {
  public:
-  uint64_t inspectedItemsCount = 0;
+  long inspectedItemsCount = 0;
   std::string name;
-  std::vector<int> items = {};
+  std::vector<long> items = {};
   Operation operation = {
       .left = "",
       .right = "",
@@ -37,7 +37,7 @@ class Monkey {
       nullptr,
   };
 
-  int operationSideToInt(const std::string& side, int item) {
+  long operationSideToInt(const std::string& side, long item) {
     if (side == "old") {
       return item;
     }
@@ -45,7 +45,7 @@ class Monkey {
     return std::stoi(side);
   }
 
-  int executeOperation(int item) {
+  long executeOperation(long item) {
     switch (operation.op) {
       case Operator::Multiply:
         return operationSideToInt(operation.left, item) *
@@ -58,10 +58,10 @@ class Monkey {
 
   void inspectItems() {
     while (!items.empty()) {
-      int item = items.front();
+      long item = items.front();
       items.erase(items.begin());
 
-      int newItem = std::floor(executeOperation(item) / 3);
+      long newItem = std::floor(executeOperation(item) / 3);
       inspectedItemsCount += 1;
 
       if (newItem % testAction.divisibleBy == 0) {
@@ -74,10 +74,10 @@ class Monkey {
 
   void inspectItems2() {
     while (!items.empty()) {
-      int item = items.front();
+      long item = items.front();
       items.erase(items.begin());
 
-      int newItem = executeOperation(item);
+      long newItem = executeOperation(item);
       inspectedItemsCount += 1;
 
       if (newItem % testAction.divisibleBy == 0) {
@@ -151,7 +151,7 @@ std::vector<std::shared_ptr<Monkey>> parseFileCreateMonkeys(
   }
 
   // initialize throw to references
-  int monkeyIndex = 0;
+  long monkeyIndex = 0;
   for (auto line : lines) {
     if (!line.has_value()) {
       continue;
@@ -187,11 +187,11 @@ void playRound(std::vector<std::shared_ptr<Monkey>> monkeys) {
   }
 }
 
-int runPart1(const std::string& filename) {
+long runPart1(const std::string& filename) {
   auto lines = ReadInput<std::string>(filename);
   auto monkeys = parseFileCreateMonkeys(lines);
 
-  for (int i = 0; i < 20; i++) {
+  for (long i = 0; i < 20; i++) {
     playRound(monkeys);
   }
 
@@ -209,7 +209,7 @@ int runPart1(const std::string& filename) {
             << monkeys[0]->inspectedItemsCount << " and "
             << monkeys[1]->inspectedItemsCount << std::endl;
 
-  int levelOfMonkeyBusiness =
+  long levelOfMonkeyBusiness =
       monkeys[0]->inspectedItemsCount * monkeys[1]->inspectedItemsCount;
 
   std::cout << "Level of monkey business: " << levelOfMonkeyBusiness
@@ -224,11 +224,11 @@ void playRound2(std::vector<std::shared_ptr<Monkey>> monkeys) {
   }
 }
 
-int runPart2(const std::string& filename) {
+long runPart2(const std::string& filename) {
   auto lines = ReadInput<std::string>(filename);
   auto monkeys = parseFileCreateMonkeys(lines);
 
-  for (int i = 0; i < 10000; i++) {
+  for (long i = 0; i < 20; i++) {
     playRound2(monkeys);
   }
 
@@ -246,7 +246,7 @@ int runPart2(const std::string& filename) {
             << monkeys[0]->inspectedItemsCount << " and "
             << monkeys[1]->inspectedItemsCount << std::endl;
 
-  uint64_t levelOfMonkeyBusiness =
+  long levelOfMonkeyBusiness =
       monkeys[0]->inspectedItemsCount * monkeys[1]->inspectedItemsCount;
 
   std::cout << "Level of monkey business: " << levelOfMonkeyBusiness
