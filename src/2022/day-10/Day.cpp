@@ -55,7 +55,7 @@ int runPart1(const std::string& filename) {
 
 class Buffer {
  public:
-  uint32_t* colorBuffer = (uint32_t*)malloc(sizeof(uint32_t) * 40 * 6);
+  uint8_t * colorBuffer = (uint8_t *)malloc(sizeof(uint8_t ) * 40 * 6);
 
   ~Buffer() { free(colorBuffer); }
 
