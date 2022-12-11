@@ -67,9 +67,9 @@ class Buffer {
         std::cout << std::endl;
       }
       if (colorBuffer[i] == 1) {
-        std::cout << "#";
+        std::cout << "█";
       } else {
-        std::cout << ".";
+        std::cout << "░";
       }
     }
   }
