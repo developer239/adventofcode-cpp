@@ -23,6 +23,8 @@ struct Operation {
 
 class Monkey {
  public:
+  int inspectedItemsCount = 0;
+  std::string name;
   std::vector<int> items = {};
   Operation operation = {
       .left = "",
@@ -60,6 +62,7 @@ class Monkey {
       items.erase(items.begin());
 
       int newItem = std::floor(executeOperation(item) / 3);
+      inspectedItemsCount += 1;
 
       if (newItem % testAction.divisibleBy == 0) {
         testAction.positive->items.emplace_back(newItem);
@@ -138,6 +141,9 @@ std::vector<std::shared_ptr<Monkey>> parseFileCreateMonkeys(
       continue;
     }
 
+    auto monkey = monkeys[monkeyIndex];
+    monkey->name = std::to_string(monkeyIndex);
+
     if (line.value().starts_with("    If true: throw to monkey ")) {
       auto monkey = monkeys[monkeyIndex];
       auto throwToIndex = line.value().substr(29);
@@ -159,9 +165,36 @@ std::vector<std::shared_ptr<Monkey>> parseFileCreateMonkeys(
   return monkeys;
 }
 
+void playRound(std::vector<std::shared_ptr<Monkey>> monkeys) {
+  for (auto monkey : monkeys) {
+    monkey->inspectItems();
+  }
+}
+
 int runPart1(const std::string& filename) {
   auto lines = ReadInput<std::string>(filename);
   auto monkeys = parseFileCreateMonkeys(lines);
 
-  return 0;
+  for (int i = 0; i < 20; i++) {
+    playRound(monkeys);
+  }
+
+  for (auto monkey : monkeys) {
+    // log inspected count
+    std::cout << "Monkey " << monkey->name << " inspected items "
+              << monkey->inspectedItemsCount << " times." << std::endl;
+  }
+
+  std::sort(monkeys.begin(), monkeys.end(), [](const auto& a, const auto& b) {
+    return a->inspectedItemsCount > b->inspectedItemsCount;
+  });
+
+  std::cout << "Two most active monkeys inspected items: " << monkeys[0]->inspectedItemsCount << " and " << monkeys[1]->inspectedItemsCount << std::endl;
+
+  int levelOfMonkeyBusiness =
+      monkeys[0]->inspectedItemsCount * monkeys[1]->inspectedItemsCount;
+
+  std::cout << "Level of monkey business: " << levelOfMonkeyBusiness << std::endl;
+
+  return levelOfMonkeyBusiness;
 }
