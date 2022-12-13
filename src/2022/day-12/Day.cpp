@@ -1,4 +1,5 @@
 #include <utility>
+#include <future>
 
 #include "src/LogVectorLines.cpp"
 #include "src/ReadInput.cpp"
@@ -182,20 +183,24 @@ long runPart2(const std::string& filename) {
   auto starts = findAllStarts(lines, 'a');
   auto input = parseInput(lines);
 
-  int shortestDistance = INT_MAX;
+  std::vector<std::future<TraversalBFSResult>> results;
 
-  for (auto start : starts) {
-    auto result = traversalBFS(input, start);
+  for(const auto& start : starts) {
+    results.push_back(std::async(std::launch::async, traversalBFS, input, start));
+  }
 
-    if (isDebug) {
-      matrixToASCII(input);
-      std::cout << std::endl;
-      matrixToASCII(result.matrix);
-    }
+  // Wait for all 10 asynchronous calls to complete
+  for (auto& result : results) {
+    result.wait();
+  }
 
-    // it returns 0 when it can't find a path and then it decrements and returns -1
-    if (result.distance > 0) {
-      shortestDistance = std::min(shortestDistance, result.distance);
+  // Extract the results from the future objects and combine them to find the
+  // overall shortest distance
+  int shortestDistance = std::numeric_limits<int>::max();
+  for (auto& result : results) {
+    auto distance = result.get().distance;
+    if(distance > 0) {
+      shortestDistance = std::min(shortestDistance, distance);
     }
   }
 
