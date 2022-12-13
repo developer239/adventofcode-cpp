@@ -178,7 +178,6 @@ std::vector<Point> findAllStarts(
 
 long runPart2(const std::string& filename) {
   auto lines = ReadInput<std::string>(filename);
-  bool isDebug = filename.find("example") != std::string::npos;
 
   auto starts = findAllStarts(lines, 'a');
   auto input = parseInput(lines);
@@ -189,13 +188,10 @@ long runPart2(const std::string& filename) {
     results.push_back(std::async(std::launch::async, traversalBFS, input, start));
   }
 
-  // Wait for all 10 asynchronous calls to complete
   for (auto& result : results) {
     result.wait();
   }
 
-  // Extract the results from the future objects and combine them to find the
-  // overall shortest distance
   int shortestDistance = std::numeric_limits<int>::max();
   for (auto& result : results) {
     auto distance = result.get().distance;
