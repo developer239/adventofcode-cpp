@@ -146,15 +146,58 @@ long runPart1(const std::string& filename) {
 
   auto result = traversalBFS(input, start);
 
-  if(isDebug) {
+  if (isDebug) {
     matrixToASCII(input);
   }
 
   std::cout << std::endl;
 
-  if(isDebug) {
+  if (isDebug) {
     matrixToASCII(result.matrix);
   }
 
   return result.distance;
+}
+
+std::vector<Point> findAllStarts(
+    std::vector<std::optional<std::string>> lines, char targetChar
+) {
+  std::vector<Point> starts;
+
+  for (int row = 0; row < lines.size(); row++) {
+    for (int col = 0; col < lines[row].value().size(); col++) {
+      if (lines[row].value()[col] == targetChar) {
+        starts.push_back({row, col});
+      }
+    }
+  }
+
+  return starts;
+}
+
+long runPart2(const std::string& filename) {
+  auto lines = ReadInput<std::string>(filename);
+  bool isDebug = filename.find("example") != std::string::npos;
+
+  auto starts = findAllStarts(lines, 'a');
+  auto input = parseInput(lines);
+
+  int shortestDistance = INT_MAX;
+
+  for (auto start : starts) {
+    auto result = traversalBFS(input, start);
+
+    if (isDebug) {
+      matrixToASCII(input);
+      std::cout << std::endl;
+      matrixToASCII(result.matrix);
+    }
+
+    // 🤯TODO: figure out why does it return result.distance -1
+    if (result.distance > 0) {
+      shortestDistance = std::min(shortestDistance, result.distance);
+    }
+  }
+
+  return shortestDistance;
 }
