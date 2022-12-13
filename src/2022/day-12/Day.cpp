@@ -139,15 +139,22 @@ Point findStart(std::vector<std::optional<std::string>> lines) {
 
 long runPart1(const std::string& filename) {
   auto lines = ReadInput<std::string>(filename);
+  bool isDebug = filename.find("example") != std::string::npos;
 
   auto start = findStart(lines);
   auto input = parseInput(lines);
 
   auto result = traversalBFS(input, start);
 
-  matrixToASCII(input);
+  if(isDebug) {
+    matrixToASCII(input);
+  }
+
   std::cout << std::endl;
-  matrixToASCII(result.matrix);
+
+  if(isDebug) {
+    matrixToASCII(result.matrix);
+  }
 
   return result.distance;
 }
