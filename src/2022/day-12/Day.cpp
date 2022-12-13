@@ -193,7 +193,7 @@ long runPart2(const std::string& filename) {
       matrixToASCII(result.matrix);
     }
 
-    // 🤯TODO: figure out why does it return result.distance -1
+    // it returns 0 when it can't find a path and then it decrements and returns -1
     if (result.distance > 0) {
       shortestDistance = std::min(shortestDistance, result.distance);
     }
