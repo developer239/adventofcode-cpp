@@ -18,6 +18,7 @@ function(initialize_library library_name library_folder)
     add_executable(${APP_NAME} ${SOURCES})
     add_test(AllTests${APP_NAME} ${APP_NAME})
 
+    file(COPY assets DESTINATION ${CMAKE_BINARY_DIR}/src/2021/${APP_FOLDER_NAME})
     file(COPY assets DESTINATION ${CMAKE_BINARY_DIR}/src/2022/${APP_FOLDER_NAME})
 
     target_link_libraries(${APP_NAME} PRIVATE Helpers)

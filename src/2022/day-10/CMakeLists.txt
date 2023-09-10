@@ -1,1 +1,1 @@
-initialize_library(Day10 day-10)
+initialize_library(22_Dat_10 day-10)
