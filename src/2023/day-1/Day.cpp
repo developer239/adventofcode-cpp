@@ -12,28 +12,28 @@ int runPart1(const std::string& filename) {
     if (line.has_value()) {
       auto calibrationValue = line.value();
 
-      int firstNumber = 0;
-      int secondNumber = 0;
+      int tensCount = 0;
+      int onesCount = 0;
 
       for (int i = 0; i < calibrationValue.length(); i++) {
         auto letter = calibrationValue[i];
 
         if (std::isdigit(letter)) {
-          int letterInt = letter - '0';
+          int digit = letter - '0';
 
-          if (!firstNumber) {
-            firstNumber = letterInt;
+          if (!tensCount) {
+            tensCount = digit;
           } else {
-            secondNumber = letterInt;
+            onesCount = digit;
           }
         }
       }
 
-      if(!secondNumber) {
-        secondNumber = firstNumber;
+      if(!onesCount) {
+        onesCount = tensCount;
       }
 
-      auto total = firstNumber * 10 + secondNumber;
+      auto total = tensCount * 10 + onesCount;
       result += total;
     }
   }
@@ -59,7 +59,7 @@ int runPart2(const std::string& filename) {
 
   for (auto line : lines) {
     if (line.has_value()) {
-      std::string numberAsString = "";
+      std::string digitAsWord = "";
       auto calibrationValue = line.value();
 
       std::vector<int> digits = {};
@@ -71,15 +71,18 @@ int runPart2(const std::string& filename) {
           int letterInt = letter - '0';
 
           digits.push_back(letterInt);
-          numberAsString = "";
+          digitAsWord = "";
         } else {
-          numberAsString.push_back(letter);
+          digitAsWord.push_back(letter);
         }
 
-        for (int j = 0; j < numberAsString.length(); j++) {
-          auto slicedNumberAsString = numberAsString.substr(j, numberAsString.length());
+        // look for digit (represented as word) at the end of the string
+        for (int sliceIndexAt = 0; sliceIndexAt < digitAsWord.length();
+             sliceIndexAt++) {
+          auto slicedEnd =
+              digitAsWord.substr(sliceIndexAt, digitAsWord.length());
 
-          auto stringNumberToInt = stringToIntMap[slicedNumberAsString];
+          auto stringNumberToInt = stringToIntMap[slicedEnd];
           if(stringNumberToInt) {
             digits.push_back(stringNumberToInt);
             break;
@@ -87,10 +90,10 @@ int runPart2(const std::string& filename) {
         }
       }
 
-      auto firstNumber = digits.front();
-      auto secondNumber = digits.back();
+      auto tensCount = digits.front();
+      auto onesCount = digits.back();
 
-      auto total = firstNumber * 10 + secondNumber;
+      auto total = tensCount * 10 + onesCount;
       result += total;
     }
   }
