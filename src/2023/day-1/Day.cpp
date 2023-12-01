@@ -4,6 +4,43 @@
 #include "src/LogVectorLines.cpp"
 #include "src/ReadInput.cpp"
 
+int runPart1(const std::string& filename) {
+  auto result = 0;
+  auto lines = ReadInput<std::string>(filename);
+
+  for (auto line : lines) {
+    if (line.has_value()) {
+      auto calibrationValue = line.value();
+
+      int firstNumber = 0;
+      int secondNumber = 0;
+
+      for (int i = 0; i < calibrationValue.length(); i++) {
+        auto letter = calibrationValue[i];
+
+        if (std::isdigit(letter)) {
+          int letterInt = letter - '0';
+
+          if (!firstNumber) {
+            firstNumber = letterInt;
+          } else {
+            secondNumber = letterInt;
+          }
+        }
+      }
+
+      if(!secondNumber) {
+        secondNumber = firstNumber;
+      }
+
+      auto total = firstNumber * 10 + secondNumber;
+      result += total;
+    }
+  }
+
+  return result;
+}
+
 std::unordered_map<std::string, int> stringToIntMap = {
     {"one", 1},
     {"two", 2},
@@ -52,43 +89,6 @@ int runPart2(const std::string& filename) {
 
       auto firstNumber = digits.front();
       auto secondNumber = digits.back();
-
-      auto total = firstNumber * 10 + secondNumber;
-      result += total;
-    }
-  }
-
-  return result;
-}
-
-int runPart1(const std::string& filename) {
-  auto result = 0;
-  auto lines = ReadInput<std::string>(filename);
-
-  for (auto line : lines) {
-    if (line.has_value()) {
-      auto calibrationValue = line.value();
-
-      int firstNumber = 0;
-      int secondNumber = 0;
-
-      for (int i = 0; i < calibrationValue.length(); i++) {
-        auto letter = calibrationValue[i];
-
-        if (std::isdigit(letter)) {
-          int letterInt = letter - '0';
-
-          if (!firstNumber) {
-            firstNumber = letterInt;
-          } else {
-            secondNumber = letterInt;
-          }
-        }
-      }
-
-      if(!secondNumber) {
-        secondNumber = firstNumber;
-      }
 
       auto total = firstNumber * 10 + secondNumber;
       result += total;
