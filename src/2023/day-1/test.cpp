@@ -2,7 +2,7 @@
 
 #include "./Day.cpp"
 
-TEST(TestDay1_23, SuccessCase) {
-//  EXPECT_EQ(99, runPart1("./assets/input-example.txt"));
-//  EXPECT_EQ(99, runPart2("./assets/input-example.txt"));
+TEST(TestDay23_1, SuccessCase) {
+  EXPECT_EQ(55834, runPart1("./assets/input.txt"));
+  EXPECT_EQ(53221, runPart2("./assets/input.txt"));
 }
