@@ -1,44 +1,10 @@
 #include <algorithm>
-#include <cctype>
-#include <locale>
 #include <numeric>
 #include <unordered_map>
 
 #include "src/LogVectorLines.cpp"
 #include "src/ReadInput.cpp"
-
-static inline void ltrim(std::string& s) {
-  s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](unsigned char ch) {
-            return !std::isspace(ch);
-          }));
-}
-
-static inline void rtrim(std::string& s) {
-  s.erase(
-      std::find_if(
-          s.rbegin(),
-          s.rend(),
-          [](unsigned char ch) { return !std::isspace(ch); }
-      ).base(),
-      s.end()
-  );
-}
-
-std::vector<std::string> splitString(std::string str, char separator) {
-  std::vector<std::string> strings;
-  int startIndex = 0, endIndex = 0;
-  for (int i = 0; i <= str.size(); i++) {
-    if (str[i] == separator || i == str.size()) {
-      endIndex = i;
-      std::string temp;
-      temp.append(str, startIndex, endIndex - startIndex);
-      strings.push_back(temp);
-      startIndex = endIndex + 1;
-    }
-  }
-
-  return strings;
-}
+#include "src/SplitString.cpp"
 
 std::unordered_map<std::string, int> defaultGameConfiguration = {
     {"red", 12}, {"green", 13}, {"blue", 14}};
@@ -69,21 +35,18 @@ int runPart1(const std::string& filename) {
         auto gameSetCubesSets = splitString(gameSetAsString, ',');
 
         for (auto& cubeSet : gameSetCubesSets) {
-          ltrim(cubeSet);
-          rtrim(cubeSet);
-
           auto splitSet = splitString(cubeSet, ' ');
 
           currentGameConfiguration[splitSet[1]] = std::stoi(splitSet[0]);
         }
 
-        for (auto& defaultConfigurationItem : defaultGameConfiguration) {
-          auto defaultConfigurationLimit = defaultConfigurationItem.second;
-          auto currentConfigurationValue =
-              currentGameConfiguration[defaultConfigurationItem.first];
+        for (auto& [colorKey, colorLimit] : defaultGameConfiguration) {
+          auto currentValue =
+              currentGameConfiguration[colorKey];
 
-          if (currentConfigurationValue > defaultConfigurationLimit) {
+          if (currentValue > colorLimit) {
             invalidGameIds.push_back(gameId);
+            // TODO: ideally also set flag and stop outer loop
             break;
           }
         }
@@ -137,9 +100,6 @@ int runPart2(const std::string& filename) {
 
         for (auto& cubeSet : gameSetCubesSets) {
           // "3 blue"
-          ltrim(cubeSet);
-          rtrim(cubeSet);
-
           auto splitSet = splitString(cubeSet, ' ');
 
           // "blue"
@@ -150,24 +110,23 @@ int runPart2(const std::string& filename) {
           currentGameConfiguration[key] = currentValue;
         }
 
-        for (auto& defaultConfigurationItem : defaultGameConfiguration) {
-          auto defaultConfigurationLimit = defaultConfigurationItem.second;
-          auto currentConfigurationValue =
-              currentGameConfiguration[defaultConfigurationItem.first];
+        for (auto& [colorKey, colorLimit] : defaultGameConfiguration) {
+          auto currentValue =
+              currentGameConfiguration[colorKey];
 
-          if (currentConfigurationValue > defaultConfigurationLimit) {
+          if (currentValue > colorLimit) {
             invalidGameIds.push_back(gameId);
+            // TODO: ideally also set flag and stop outer loop
             break;
           }
         }
 
         // actual part 2
-        for(auto& currentConfigurationItem: currentGameConfiguration) {
-          auto currentItemCurrentValue = currentConfigurationItem.second;
-          auto minimalPossibleValue = minimalPossibleCurrentGameConfiguration[currentConfigurationItem.first];
+        for(auto& [color, currentValue]: currentGameConfiguration) {
+          auto minimalPossibleValue = minimalPossibleCurrentGameConfiguration[color];
 
-          if(currentItemCurrentValue > minimalPossibleValue) {
-            minimalPossibleCurrentGameConfiguration[currentConfigurationItem.first] = currentItemCurrentValue;
+          if(currentValue > minimalPossibleValue) {
+            minimalPossibleCurrentGameConfiguration[color] = currentValue;
           }
         }
       }
@@ -179,8 +138,6 @@ int runPart2(const std::string& filename) {
           std::count(invalidGameIds.begin(), invalidGameIds.end(), gameId);
       if (count == 0) {
         validGameIds.push_back(gameId);
-      } else {
-        std::cout << "game is valid" << std::endl;
       }
     }
   }

@@ -1,6 +1,26 @@
 #include <fstream>
 #include <vector>
 
+/**
+ * @brief Splits a string into tokens based on the provided delimiters.
+ *
+ * The function `tokenize` takes a string and a set of delimiter characters.
+ * It then scans the string and splits it into a series of substrings (tokens),
+ * each of which is separated by at least one of the delimiter characters.
+ * The resulting tokens are stored in a vector and returned.
+ *
+ * @param str The string to be tokenized.
+ * @param delimiters A string containing all delimiter characters.
+ * @return std::vector<std::string> A vector of tokenized substrings.
+ *
+ * Example:
+ *
+ *   std::string text = "Hello, world! Welcome to C++ programming.";
+ *   std::string delims = " ,!."; // Delimiters are space, comma, exclamation, and period
+ *   std::vector<std::string> tokens = tokenize(text, delims);
+ *
+ *   // The 'tokens' vector will contain: ["Hello", "world", "Welcome", "to", "C++", "programming"]
+ */
 std::vector<std::string> tokenize(
     const std::string& str, const std::string& delimiters
 ) {
