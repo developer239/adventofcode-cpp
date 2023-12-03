@@ -1,4 +1,4 @@
-#include <numeric>
+#include <functional>
 #include <unordered_map>
 
 #include "src/LogVectorLines.cpp"
@@ -12,21 +12,41 @@ struct Part {
   bool isRealEnginePart = false;
 };
 
-bool isSymbol(char ch) {
-  return !std::isdigit(ch) && ch != '.';
-}
+bool isSymbol(char ch) { return !std::isdigit(ch) && ch != '.'; }
 
-bool isAdjacentToSymbol(int row, int col, int numberLength, const std::vector<std::optional<std::string>>& lines) {
-  static const int dx[] = {-1, -1, -1, 0, 1, 1, 1, 0, 0};
-  static const int dy[] = {-1, 0, 1, 1, 1, 0, -1, -1, 0};
+struct Direction {
+  int dRow;
+  int dCol;
+};
 
+std::vector<Direction> directions = {
+    {-1, -1}, // Top-Left
+    {-1,  0}, // Top
+    {-1,  1}, // Top-Right
+    { 0,  1}, // Right
+    { 1,  1}, // Bottom-Right
+    { 1,  0}, // Bottom
+    { 1, -1}, // Bottom-Left
+    { 0, -1}, // Left
+};
+
+bool isAdjacentToSymbol(
+    int row, int col, int numberLength,
+    const std::vector<std::optional<std::string>>& lines,
+    std::function<void(int, int, char)> symbolCallback = nullptr
+) {
   for (int i = 0; i < numberLength; i++) {
-    for (int d = 0; d < 9; d++) {
-      int newRow = row + dx[d];
-      int newCol = col + i + dy[d];
+    for (const auto& dir : directions) {
+      int newRow = row + dir.dRow;
+      int newCol = col + i + dir.dCol;
 
-      if (newRow >= 0 && newRow < lines.size() && newCol >= 0 && newCol < lines[newRow]->length()) {
-        if (isSymbol(lines[newRow]->at(newCol))) {
+      if (newRow >= 0 && newRow < lines.size() && newCol >= 0 &&
+          newCol < lines[newRow]->length()) {
+        char foundSymbol = lines[newRow]->at(newCol);
+        if (isSymbol(foundSymbol)) {
+          if (symbolCallback) {
+            symbolCallback(newRow, newCol, foundSymbol);
+          }
           return true;
         }
       }
@@ -83,7 +103,8 @@ int runPart1(const std::string& filename) {
 
   // Check if each part is a real engine part using directional scanning
   for (auto& part : parts) {
-    part.isRealEnginePart = isAdjacentToSymbol(part.row, part.column, part.number.length(), lines);
+    part.isRealEnginePart =
+        isAdjacentToSymbol(part.row, part.column, part.number.length(), lines);
   }
 
   auto sumOfAllParts = 0;
@@ -97,8 +118,6 @@ int runPart1(const std::string& filename) {
 }
 
 struct GearSymbols {
-  int row = -1;
-  int column = -1;
   int adjacentCount = 0;
   std::vector<std::string> adjacentNumbers = {};
 };
@@ -151,208 +170,36 @@ int runPart2(const std::string& filename) {
     }
   }
 
-  // go through all parts
   for (auto& part : parts) {
-    int row = -1;
-    int col = -1;
-    int colLimit = -1;
-    bool isRowInBoundaries = false;
-
-    // check top
-    row = part.row - 1;
-    col = part.column - 1;
-    colLimit = col + part.number.length() + 2;
-
-    isRowInBoundaries = row >= 0 && row < lines.size();
-    if (isRowInBoundaries) {
-      auto line = lines[row];
-
-      if (line.has_value()) {
-        // fix col boundaries
-        if (col < 0) {
-          col = 0;
-        }
-        if (colLimit > line->length() - 1) {
-          colLimit -= 1;
-        }
-
-        for (int i = col; i < colLimit; i++) {
-          auto letter = line->at(i);
-
-          auto isLetterDigit = std::isdigit(letter);
-          auto isPeriod = letter == '.';
-          auto isSymbol = !isPeriod && !isLetterDigit;
-
-          if (isSymbol) {
-            part.isRealEnginePart = true;
-
-            auto isGearSymbol = letter == '*';
-            if (isGearSymbol) {
-              auto gearColumn = i;
-              auto gearRow = row;
-
-              auto key =
-                  std::to_string(gearRow) + "-" + std::to_string(gearColumn);
-
-              auto gearSymbol = gearSymbolsMap.find(key);
-
-              if (gearSymbol != gearSymbolsMap.end()) {
-                gearSymbol->second.adjacentCount++;
-                gearSymbol->second.adjacentNumbers.push_back(part.number);
-              } else {
-                gearSymbolsMap[key] = {gearRow, gearColumn, 1, {part.number}};
-              }
+    isAdjacentToSymbol(
+        part.row,
+        part.column,
+        part.number.length(),
+        lines,
+        [&](int gearRow, int gearCol, char symbol) {
+          if (symbol == '*') {
+            std::string key =
+                std::to_string(gearRow) + "-" + std::to_string(gearCol);
+            auto& gearSymbol = gearSymbolsMap[key];
+            if (std::find(
+                    gearSymbol.adjacentNumbers.begin(),
+                    gearSymbol.adjacentNumbers.end(),
+                    part.number
+                ) == gearSymbol.adjacentNumbers.end()) {
+              gearSymbol.adjacentCount++;
+              gearSymbol.adjacentNumbers.push_back(part.number);
             }
           }
         }
-      }
-    }
-
-    // check left
-    row = part.row;
-    col = part.column - 1;
-
-    // note: always true
-    isRowInBoundaries = true;
-    if (isRowInBoundaries) {
-      auto line = lines[row];
-
-      if (line.has_value()) {
-        // only if col in boundaries
-        if (col > -1 && col < line->length() - 1) {
-          auto letter = line->at(col);
-
-          auto isLetterDigit = std::isdigit(letter);
-          auto isPeriod = letter == '.';
-          auto isSymbol = !isPeriod && !isLetterDigit;
-
-          if (isSymbol) {
-            part.isRealEnginePart = true;
-
-            auto isGearSymbol = letter == '*';
-            if (isGearSymbol) {
-              auto gearColumn = col;
-              auto gearRow = row;
-
-              auto key =
-                  std::to_string(gearRow) + "-" + std::to_string(gearColumn);
-
-              auto gearSymbol = gearSymbolsMap.find(key);
-
-              if (gearSymbol != gearSymbolsMap.end()) {
-                gearSymbol->second.adjacentCount++;
-                gearSymbol->second.adjacentNumbers.push_back(part.number);
-              } else {
-                gearSymbolsMap[key] = {gearRow, gearColumn, 1, {part.number}};
-              }
-            }
-          }
-        }
-      }
-    }
-
-    // check right
-    row = part.row;
-    col = part.column + part.number.length();
-
-    // note: always true
-    isRowInBoundaries = true;
-    if (isRowInBoundaries) {
-      auto line = lines[row];
-
-      if (line.has_value()) {
-        // only if col in boundaries
-        if (col > -1 && col < line->length() - 1) {
-          auto letter = line->at(col);
-
-          auto isLetterDigit = std::isdigit(letter);
-          auto isPeriod = letter == '.';
-          auto isSymbol = !isPeriod && !isLetterDigit;
-
-          if (isSymbol) {
-            part.isRealEnginePart = true;
-
-            auto isGearSymbol = letter == '*';
-            if (isGearSymbol) {
-              auto gearColumn = col;
-              auto gearRow = row;
-
-              auto key =
-                  std::to_string(gearRow) + "-" + std::to_string(gearColumn);
-
-              auto gearSymbol = gearSymbolsMap.find(key);
-
-              if (gearSymbol != gearSymbolsMap.end()) {
-                gearSymbol->second.adjacentCount++;
-                gearSymbol->second.adjacentNumbers.push_back(part.number);
-              } else {
-                gearSymbolsMap[key] = {gearRow, gearColumn, 1, {part.number}};
-              }
-            }
-          }
-        }
-      }
-    }
-
-    // check bottom
-    row = part.row + 1;
-    col = part.column - 1;
-    colLimit = col + part.number.length() + 2;
-
-    isRowInBoundaries = row >= 0 && row < lines.size();
-    if (isRowInBoundaries) {
-      auto line = lines[row];
-
-      if (line.has_value()) {
-        // fix col boundaries
-        if (col < 0) {
-          col = 0;
-        }
-        if (colLimit > line->length() - 1) {
-          colLimit -= 1;
-        }
-
-        for (int i = col; i < colLimit; i++) {
-          auto letter = line->at(i);
-
-          auto isLetterDigit = std::isdigit(letter);
-          auto isPeriod = letter == '.';
-          auto isSymbol = !isPeriod && !isLetterDigit;
-
-          if (isSymbol) {
-            part.isRealEnginePart = true;
-
-            auto isGearSymbol = letter == '*';
-            if (isGearSymbol) {
-              auto gearColumn = i;
-              auto gearRow = row;
-
-              auto key =
-                  std::to_string(gearRow) + "-" + std::to_string(gearColumn);
-
-              auto gearSymbol = gearSymbolsMap.find(key);
-
-              if (gearSymbol != gearSymbolsMap.end()) {
-                gearSymbol->second.adjacentCount++;
-                gearSymbol->second.adjacentNumbers.push_back(part.number);
-              } else {
-                gearSymbolsMap[key] = {gearRow, gearColumn, 1, {part.number}};
-              }
-            }
-          }
-        }
-      }
-    }
+    );
   }
 
-  auto sumOfAllGearRatios = 0;
-
-  for (auto [key, gearSymbol] : gearSymbolsMap) {
+  // Calculate sum of all gear ratios
+  int sumOfAllGearRatios = 0;
+  for (auto& [key, gearSymbol] : gearSymbolsMap) {
     if (gearSymbol.adjacentCount == 2) {
-      auto firstNumber = gearSymbol.adjacentNumbers[0];
-      auto secondNumber = gearSymbol.adjacentNumbers[1];
-      auto gearRatio = std::stoi(firstNumber) * std::stoi(secondNumber);
-
+      auto gearRatio = std::stoi(gearSymbol.adjacentNumbers[0]) *
+                       std::stoi(gearSymbol.adjacentNumbers[1]);
       sumOfAllGearRatios += gearRatio;
     }
   }
