@@ -12,6 +12,53 @@ struct Part {
   bool isRealEnginePart = false;
 };
 
+std::vector<Part> findAllParts(const std::vector<std::optional<std::string>>& lines) {
+  std::vector<Part> parts = {};
+
+  for (int row = 0; row < lines.size(); row++) {
+    auto line = lines[row];
+    if (line.has_value()) {
+      std::string partNumber = "";
+      int rowStart = 0;
+      int columnStart = 0;
+
+      for (int col = 0; col < line->length(); col++) {
+        auto letter = line->at(col);
+
+        if (std::isdigit(letter)) {
+          if (partNumber.length() == 0) {
+            rowStart = row;
+            columnStart = col;
+          }
+
+          partNumber.push_back(letter);
+          continue;
+        }
+
+        // add number and reset START
+        if (partNumber.length()) {
+          parts.push_back({rowStart, columnStart, partNumber});
+
+          partNumber = "";
+        }
+        // END
+      }
+
+      // add number and reset START
+      if (partNumber.length()) {
+        parts.push_back({rowStart, columnStart, partNumber});
+
+        // technically you don't have to reset you only want to add what is left
+        // in the memory
+        partNumber = "";
+      }
+      // END
+    }
+  }
+
+  return parts;
+}
+
 bool isSymbol(char ch) { return !std::isdigit(ch) && ch != '.'; }
 
 struct Direction {
@@ -56,52 +103,9 @@ bool isAdjacentToSymbol(
 }
 
 int runPart1(const std::string& filename) {
-  std::vector<Part> parts = {};
-
   auto lines = ReadInput<std::string>(filename);
+  auto parts = findAllParts(lines);
 
-  for (int row = 0; row < lines.size(); row++) {
-    auto line = lines[row];
-    if (line.has_value()) {
-      std::string partNumber = "";
-      int rowStart = 0;
-      int columnStart = 0;
-
-      for (int col = 0; col < line->length(); col++) {
-        auto letter = line->at(col);
-
-        if (std::isdigit(letter)) {
-          if (partNumber.length() == 0) {
-            rowStart = row;
-            columnStart = col;
-          }
-
-          partNumber.push_back(letter);
-          continue;
-        }
-
-        // add number and reset START
-        if (partNumber.length()) {
-          parts.push_back({rowStart, columnStart, partNumber});
-
-          partNumber = "";
-        }
-        // END
-      }
-
-      // add number and reset START
-      if (partNumber.length()) {
-        parts.push_back({rowStart, columnStart, partNumber});
-
-        // technically you don't have to reset you only want to add what is left
-        // in the memory
-        partNumber = "";
-      }
-      // END
-    }
-  }
-
-  // Check if each part is a real engine part using directional scanning
   for (auto& part : parts) {
     part.isRealEnginePart =
         isAdjacentToSymbol(part.row, part.column, part.number.length(), lines);
@@ -123,52 +127,11 @@ struct GearSymbols {
 };
 
 int runPart2(const std::string& filename) {
-  std::vector<Part> parts = {};
+  auto lines = ReadInput<std::string>(filename);
+  auto parts = findAllParts(lines);
+
   // key: row-col, val: GearSymbols
   std::unordered_map<std::string, GearSymbols> gearSymbolsMap = {};
-
-  auto lines = ReadInput<std::string>(filename);
-
-  for (int row = 0; row < lines.size(); row++) {
-    auto line = lines[row];
-    if (line.has_value()) {
-      std::string partNumber = "";
-      int rowStart = 0;
-      int columnStart = 0;
-
-      for (int col = 0; col < line->length(); col++) {
-        auto letter = line->at(col);
-
-        if (std::isdigit(letter)) {
-          if (partNumber.length() == 0) {
-            rowStart = row;
-            columnStart = col;
-          }
-
-          partNumber.push_back(letter);
-          continue;
-        }
-
-        // add number and reset START
-        if (partNumber.length()) {
-          parts.push_back({rowStart, columnStart, partNumber});
-
-          partNumber = "";
-        }
-        // END
-      }
-
-      // add number and reset START
-      if (partNumber.length()) {
-        parts.push_back({rowStart, columnStart, partNumber});
-
-        // technically you don't have to reset you only want to add what is left
-        // in the memory
-        partNumber = "";
-      }
-      // END
-    }
-  }
 
   for (auto& part : parts) {
     isAdjacentToSymbol(
@@ -181,6 +144,7 @@ int runPart2(const std::string& filename) {
             std::string key =
                 std::to_string(gearRow) + "-" + std::to_string(gearCol);
             auto& gearSymbol = gearSymbolsMap[key];
+
             if (std::find(
                     gearSymbol.adjacentNumbers.begin(),
                     gearSymbol.adjacentNumbers.end(),
