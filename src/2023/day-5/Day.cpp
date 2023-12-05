@@ -171,4 +171,34 @@ std::string runPart1(const std::string& filename) {
   return std::to_string(lowestLocation);
 }
 
-int runPart2(const std::string& filename) { return 0; }
+std::string runPart2(const std::string& filename) {
+  auto [allMaps, seedRanges] = ParseInput(filename);
+
+  std::unordered_map<long long, long long> seedToLocation = {};
+
+  for (size_t i = 0; i < seedRanges.size(); i += 2) {
+    long long seedStart = seedRanges[i];
+    long long rangeLength = seedRanges[i + 1];
+
+    for (long long seed = seedStart; seed < seedStart + rangeLength; ++seed) {
+      auto soil = allMaps[SEED_TO_SOIL].get(seed);
+      auto fertilizer = allMaps[SOIL_TO_FERTILIZER].get(soil);
+      auto water = allMaps[FERTILIZER_TO_WATER].get(fertilizer);
+      auto light = allMaps[WATER_TO_LIGHT].get(water);
+      auto temperature = allMaps[LIGHT_TO_TEMPERATURE].get(light);
+      auto humidity = allMaps[TEMPERATURE_TO_HUMIDITY].get(temperature);
+      auto location = allMaps[HUMIDITY_TO_LOCATION].get(humidity);
+
+      seedToLocation[seed] = location;
+    }
+  }
+
+  long long lowestLocation = std::numeric_limits<long long>::max();
+  for (auto [seed, location] : seedToLocation) {
+    if (location < lowestLocation) {
+      lowestLocation = location;
+    }
+  }
+
+  return std::to_string(lowestLocation);
+}
