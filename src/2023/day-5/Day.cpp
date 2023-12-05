@@ -1,5 +1,9 @@
+#include <algorithm>
 #include <functional>
+#include <limits>
+#include <string>
 #include <unordered_map>
+#include <vector>
 
 #include "src/LogVectorLines.cpp"
 #include "src/ReadInput.cpp"
@@ -15,22 +19,30 @@ enum MapType {
   HUMIDITY_TO_LOCATION = 7
 };
 
-#include <unordered_map>
-
 class ConversionMap {
  public:
-  long long get(int key) const {
-    auto it = map.find(key);
-    if (it == map.end()) {
-      return key;
-    }
-    return it->second;
+  void addRange(
+      long long sourceStart, long long destinationStart, long long length
+  ) {
+    ranges.push_back({sourceStart, destinationStart, length});
   }
 
-  long long& operator[](int key) { return map[key]; }
+  long long operator[](long long key) const {
+    for (const auto& range : ranges) {
+      if (key >= range.sourceStart && key < range.sourceStart + range.length) {
+        return range.destinationStart + key - range.sourceStart;
+      }
+    }
+    return key;
+  }
 
  private:
-  std::unordered_map<long long, long long> map;
+  struct Range {
+    long long sourceStart;
+    long long destinationStart;
+    long long length;
+  };
+  std::vector<Range> ranges;
 };
 
 using AllMaps = std::unordered_map<MapType, ConversionMap>;
@@ -106,23 +118,21 @@ PuzzleInput ParseInput(const std::string& filename) {
     }
 
     auto line = lines[lineIndex].value();
-
     auto mapType = lineToMapType[line];
 
     if (mapType) {
-      int mapValueLineIndex = lineIndex + 1;
+      auto mapValueLineIndex = lineIndex + 1;
 
-      while (lines[mapValueLineIndex].has_value()) {
+      while (mapValueLineIndex < lines.size() &&
+             lines[mapValueLineIndex].has_value()) {
         auto mapValueLine = lines[mapValueLineIndex].value();
         auto splitMapValueLine = splitString(mapValueLine, ' ');
 
-        long long source = std::stoll(splitMapValueLine[1]);
-        long long destination = std::stoll(splitMapValueLine[0]);
-        long long range = std::stoll(splitMapValueLine[2]);
+        long long sourceStart = std::stoll(splitMapValueLine[1]);
+        long long destinationStart = std::stoll(splitMapValueLine[0]);
+        long long length = std::stoll(splitMapValueLine[2]);
 
-        for (int i = 0; i < range; i++) {
-          allMaps[mapType][source + i] = destination + i;
-        }
+        allMaps[mapType].addRange(sourceStart, destinationStart, length);
 
         mapValueLineIndex++;
       }
@@ -134,34 +144,31 @@ PuzzleInput ParseInput(const std::string& filename) {
   return {allMaps, seeds};
 }
 
-int runPart1(const std::string& filename) {
+std::string runPart1(const std::string& filename) {
   auto [allMaps, seeds] = ParseInput(filename);
 
-  // seed-to-soil -> soil-to-fertilizer -> fertilizer-to-water -> water-to-light
-  // -> light-to-temperature -> temperature-to-humidity -> humidity-to-location
-
-  std::unordered_map<int, int> seedToLocation = {};
+  std::unordered_map<long long, long long> seedToLocation = {};
 
   for (auto seed : seeds) {
-    auto soil = allMaps[SEED_TO_SOIL].get(seed);
-    auto fertilizer = allMaps[SOIL_TO_FERTILIZER].get(soil);
-    auto water = allMaps[FERTILIZER_TO_WATER].get(fertilizer);
-    auto light = allMaps[WATER_TO_LIGHT].get(water);
-    auto temperature = allMaps[LIGHT_TO_TEMPERATURE].get(light);
-    auto humidity = allMaps[TEMPERATURE_TO_HUMIDITY].get(temperature);
-    auto location = allMaps[HUMIDITY_TO_LOCATION].get(humidity);
+    auto soil = allMaps[SEED_TO_SOIL][seed];
+    auto fertilizer = allMaps[SOIL_TO_FERTILIZER][soil];
+    auto water = allMaps[FERTILIZER_TO_WATER][fertilizer];
+    auto light = allMaps[WATER_TO_LIGHT][water];
+    auto temperature = allMaps[LIGHT_TO_TEMPERATURE][light];
+    auto humidity = allMaps[TEMPERATURE_TO_HUMIDITY][temperature];
+    auto location = allMaps[HUMIDITY_TO_LOCATION][humidity];
 
     seedToLocation[seed] = location;
   }
 
-  int lowestLocation = INT_MAX;
+  long long lowestLocation = std::numeric_limits<long long>::max();
   for (auto [seed, location] : seedToLocation) {
     if (location < lowestLocation) {
       lowestLocation = location;
     }
   }
 
-  return lowestLocation;
+  return std::to_string(lowestLocation);
 }
 
 int runPart2(const std::string& filename) { return 0; }
