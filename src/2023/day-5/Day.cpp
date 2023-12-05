@@ -27,7 +27,7 @@ class ConversionMap {
     ranges.push_back({sourceStart, destinationStart, length});
   }
 
-  long long operator[](long long key) const {
+  long long get(long long key) const {
     for (const auto& range : ranges) {
       if (key >= range.sourceStart && key < range.sourceStart + range.length) {
         return range.destinationStart + key - range.sourceStart;
@@ -150,13 +150,13 @@ std::string runPart1(const std::string& filename) {
   std::unordered_map<long long, long long> seedToLocation = {};
 
   for (auto seed : seeds) {
-    auto soil = allMaps[SEED_TO_SOIL][seed];
-    auto fertilizer = allMaps[SOIL_TO_FERTILIZER][soil];
-    auto water = allMaps[FERTILIZER_TO_WATER][fertilizer];
-    auto light = allMaps[WATER_TO_LIGHT][water];
-    auto temperature = allMaps[LIGHT_TO_TEMPERATURE][light];
-    auto humidity = allMaps[TEMPERATURE_TO_HUMIDITY][temperature];
-    auto location = allMaps[HUMIDITY_TO_LOCATION][humidity];
+    auto soil = allMaps[SEED_TO_SOIL].get(seed);
+    auto fertilizer = allMaps[SOIL_TO_FERTILIZER].get(soil);
+    auto water = allMaps[FERTILIZER_TO_WATER].get(fertilizer);
+    auto light = allMaps[WATER_TO_LIGHT].get(water);
+    auto temperature = allMaps[LIGHT_TO_TEMPERATURE].get(light);
+    auto humidity = allMaps[TEMPERATURE_TO_HUMIDITY].get(temperature);
+    auto location = allMaps[HUMIDITY_TO_LOCATION].get(humidity);
 
     seedToLocation[seed] = location;
   }
