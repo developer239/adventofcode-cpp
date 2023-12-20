@@ -9,7 +9,8 @@ std::unordered_map<char, int> cardStrengthMap = {
     {'A', 14},
     {'K', 13},
     {'Q', 12},
-    {'J', 11},
+    // part 1
+    // {'J', 11},
     {'T', 10},
     {'9', 9},
     {'8', 8},
@@ -18,7 +19,8 @@ std::unordered_map<char, int> cardStrengthMap = {
     {'5', 5},
     {'4', 4},
     {'3', 3},
-    {'2', 2}};
+    {'2', 2},
+    {'J', 1}};
 
 enum HandType {
   FIVE_KIND = 7,
@@ -68,19 +70,48 @@ HandType GetHandType(std::string cards) {
     cardCountMap[card] += 1;
   }
 
+  // if all jokers
+  if (cardCountMap['J'] == 5) {
+    return FIVE_KIND;
+  }
+
+  // Joker replace card logic
+  //  auto strongestCard = cards[0];
+  //  for (auto& card : cards) {
+  //    if (cardStrengthMap[card] > cardStrengthMap[strongestCard]) {
+  //      strongestCard = card;
+  //    }
+  //  }
+  auto highestCountCard = cards[0];
+  for (auto& cardCount : cardCountMap) {
+    if (cardCount.second > cardCountMap[highestCountCard]) {
+      if(cardCount.first != 'J') {
+        highestCountCard = cardCount.first;
+      }
+    }
+  }
+  if (cardCountMap['J']) {
+    cardCountMap[highestCountCard] += cardCountMap['J'];
+
+    // TODO: how to properly delete a key from a map?
+    cardCountMap.erase('J');
+  }
+
   std::vector<int> sortedCardCounts = {};
   for (auto& cardCount : cardCountMap) {
-    sortedCardCounts.push_back(cardCount.second);
+    if (cardCount.second > 0) {
+      sortedCardCounts.push_back(cardCount.second);
+    }
   }
   std::sort(sortedCardCounts.begin(), sortedCardCounts.end(), std::greater<>());
 
   // five kind
-  if (cardCountMap.size() == 1) {
+  if (sortedCardCounts.size() == 1) {
     return FIVE_KIND;
   }
 
   // four kind of full house
-  if (cardCountMap.size() == 2) {
+  if (sortedCardCounts.size() == 2) {
     if (sortedCardCounts[0] == 4) {
       return FOUR_KIND;
     } else {
@@ -89,7 +120,7 @@ HandType GetHandType(std::string cards) {
   }
 
   // three kind or two pair
-  if (cardCountMap.size() == 3) {
+  if (sortedCardCounts.size() == 3) {
     if (sortedCardCounts[0] == 3) {
       return THREE_KIND;
     } else {
@@ -97,7 +128,7 @@ HandType GetHandType(std::string cards) {
     }
   }
 
-  auto isOnePair = cardCountMap.size() == 4;
+  auto isOnePair = sortedCardCounts.size() == 4;
   if (isOnePair) {
     return ONE_PAIR;
   }
@@ -123,7 +154,7 @@ std::vector<Hand> ParseInput(const std::string& filename) {
 
 bool compareHands(const Hand& a, const Hand& b) { return a < b; }
 
-int runPart1(const std::string& filename) {
+int runPart2(const std::string& filename) {
   auto input = ParseInput(filename);
 
   std::sort(input.begin(), input.end(), compareHands);
@@ -134,11 +165,9 @@ int runPart1(const std::string& filename) {
     totalWinnings += rank * input[i].bid;
   }
 
-  for(auto& hand : input) {
+  for (auto& hand : input) {
     std::cout << hand.cards << " " << hand.bid << std::endl;
   }
 
   return totalWinnings;
 }
-
-int runPart2(const std::string& filename) { return 0; }
