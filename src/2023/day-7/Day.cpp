@@ -6,9 +6,10 @@
 #include "src/SplitString.cpp"
 
 std::unordered_map<char, int> cardStrengthMap = {
-    {'A', 13},
-    {'K', 12},
-    {'Q', 11},
+    {'A', 14},
+    {'K', 13},
+    {'Q', 12},
+    {'J', 11},
     {'T', 10},
     {'9', 9},
     {'8', 8},
@@ -131,6 +132,10 @@ int runPart1(const std::string& filename) {
   for (int i = 0; i < input.size(); i++) {
     auto rank = i + 1;
     totalWinnings += rank * input[i].bid;
+  }
+
+  for(auto& hand : input) {
+    std::cout << hand.cards << " " << hand.bid << std::endl;
   }
 
   return totalWinnings;
