@@ -65,73 +65,43 @@ struct Hand {
 };
 
 HandType GetHandType(std::string cards) {
-  std::unordered_map<char, int> cardCountMap = {};
-  for (auto& card : cards) {
-    cardCountMap[card] += 1;
-  }
+  std::unordered_map<char, int> cardCountMap;
+  int jokerCount = 0;
 
-  // if all jokers
-  if (cardCountMap['J'] == 5) {
-    return FIVE_KIND;
-  }
-
-  // Joker replace card logic
-  //  auto strongestCard = cards[0];
-  //  for (auto& card : cards) {
-  //    if (cardStrengthMap[card] > cardStrengthMap[strongestCard]) {
-  //      strongestCard = card;
-  //    }
-  //  }
-  auto highestCountCard = cards[0];
-  for (auto& cardCount : cardCountMap) {
-    if (cardCount.second > cardCountMap[highestCountCard]) {
-      if(cardCount.first != 'J') {
-        highestCountCard = cardCount.first;
-      }
-    }
-  }
-  if (cardCountMap['J']) {
-    cardCountMap[highestCountCard] += cardCountMap['J'];
-
-    // TODO: how to properly delete a key from a map?
-    cardCountMap.erase('J');
-  }
-
-  std::vector<int> sortedCardCounts = {};
-  for (auto& cardCount : cardCountMap) {
-    if (cardCount.second > 0) {
-      sortedCardCounts.push_back(cardCount.second);
-    }
-  }
-  std::sort(sortedCardCounts.begin(), sortedCardCounts.end(), std::greater<>());
-
-  // five kind
-  if (sortedCardCounts.size() == 1) {
-    return FIVE_KIND;
-  }
-
-  // four kind of full house
-  if (sortedCardCounts.size() == 2) {
-    if (sortedCardCounts[0] == 4) {
-      return FOUR_KIND;
+  for (char card : cards) {
+    if (card == 'J') {
+      jokerCount++;
     } else {
-      return FULL_HOUSE;
+      cardCountMap[card]++;
     }
   }
 
-  // three kind or two pair
-  if (sortedCardCounts.size() == 3) {
-    if (sortedCardCounts[0] == 3) {
-      return THREE_KIND;
+  // Adjust counts with Joker
+  if (jokerCount > 0) {
+    if (!cardCountMap.empty()) {
+      auto it = std::max_element(cardCountMap.begin(), cardCountMap.end(),
+                                 [](const auto& p1, const auto& p2) {
+                                   return p1.second < p2.second;
+                                 });
+      it->second += jokerCount;
     } else {
-      return TWO_PAIR;
+      // All cards are Jokers
+      return FIVE_KIND;
     }
   }
 
-  auto isOnePair = sortedCardCounts.size() == 4;
-  if (isOnePair) {
-    return ONE_PAIR;
+  std::vector<int> counts;
+  for (auto& p : cardCountMap) {
+    counts.push_back(p.second);
   }
+  std::sort(counts.begin(), counts.end(), std::greater<int>());
+
+  if (counts[0] == 5) return FIVE_KIND;
+  if (counts[0] == 4) return FOUR_KIND;
+  if (counts.size() == 2 && counts[1] == 2) return FULL_HOUSE;
+  if (counts[0] == 3) return THREE_KIND;
+  if (counts.size() >= 3 && counts[1] == 2) return TWO_PAIR;
+  if (counts.size() >= 4 && counts[0] == 2) return ONE_PAIR;
 
   return HIGH_CARD;
 }
