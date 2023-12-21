@@ -183,7 +183,12 @@ std::vector<Tile> findConnectedTiles(const Tile& tile, const Map& map) {
   return result;
 }
 
-int runPart1(const std::string& filename) {
+struct Input {
+  Map map;
+  std::vector<Tile> loop;
+};
+
+Input CreateLoop(const std::string& filename) {
   auto map = ParseInput(filename);
   Tile startTile = findStartTile(map);
   startTile.distanceFromStart = 0;
@@ -225,6 +230,12 @@ int runPart1(const std::string& filename) {
     tile.distanceFromStart = std::min(tile.distanceFromStart, reverseDistance);
   }
 
+  return {map, loop};
+}
+
+int runPart1(const std::string& filename) {
+  auto [map, loop] = CreateLoop(filename);
+
   std::cout << "Loop: " << std::endl;
   for (const auto& tile : loop) {
     std::cout << "Tile: " << tile.type << " at (" << tile.row << ", "
@@ -244,4 +255,46 @@ int runPart1(const std::string& filename) {
   return maxDistanceFromStart->distanceFromStart;
 }
 
-int runPart2(const std::string& filename) { return 0; }
+bool hasNorthExit(const char type) {
+  if (connectivityRules.count(type) > 0) {
+    const auto& exits = connectivityRules.at(type);
+    if (exits.count('|') > 0) {
+      return exits.at('|').count(NORTH) > 0;
+    }
+  }
+  return false;
+}
+
+int runPart2(const std::string& filename) {
+  auto [map, loop] = CreateLoop(filename);
+
+  std::set<std::pair<int, int>> loopSet;
+  for (const auto& tile : loop) {
+    loopSet.insert({tile.row, tile.col});
+  }
+
+  int minRow = map.size(), maxRow = 0, minCol = map[0].size(), maxCol = 0;
+  for (const auto& [row, col] : loopSet) {
+    minRow = std::min(minRow, row);
+    maxRow = std::max(maxRow, row);
+    minCol = std::min(minCol, col);
+    maxCol = std::max(maxCol, col);
+  }
+
+  int inside_count = 0;
+  for (int row = minRow; row <= maxRow; ++row) {
+    bool is_inside = false;
+    for (int col = minCol; col <= maxCol; ++col) {
+      if (loopSet.count({row, col})) {
+        const auto& tile = map[row][col];
+        if (hasNorthExit(tile.type)) {
+          is_inside = !is_inside;
+        }
+      } else if (is_inside) {
+        ++inside_count;
+      }
+    }
+  }
+
+  return inside_count;
+}
