@@ -42,7 +42,11 @@ int runPart1(const std::string& filename) {
     //      0   0   0   0
     std::vector<std::vector<int>> pyramid = {line};
     auto currentPyramidLine = line;
-    bool allZeroes = std::all_of(currentPyramidLine.begin(), currentPyramidLine.end(), [](int i) { return i == 0; });
+    bool allZeroes = std::all_of(
+        currentPyramidLine.begin(),
+        currentPyramidLine.end(),
+        [](int i) { return i == 0; }
+    );
 
     while (!allZeroes) {
       std::vector<int> nextLine = {};
@@ -56,7 +60,11 @@ int runPart1(const std::string& filename) {
 
       pyramid.push_back(nextLine);
       currentPyramidLine = nextLine;
-      allZeroes = std::all_of(currentPyramidLine.begin(), currentPyramidLine.end(), [](int i) { return i == 0; });
+      allZeroes = std::all_of(
+          currentPyramidLine.begin(),
+          currentPyramidLine.end(),
+          [](int i) { return i == 0; }
+      );
     }
 
     //    0   3   6   9  12  15   B
@@ -90,7 +98,74 @@ int runPart1(const std::string& filename) {
 }
 
 int runPart2(const std::string& filename) {
-  auto result = 0;
+  auto history = ParseInput(filename);
 
-  return result;
+  std::vector<int> predictedValues = {};
+
+  //    3   3   3   3   3
+  //      0   0   0   0
+  for (int i = 0; i < history.size(); i++) {
+    //  0   3   6   9  12  15
+    auto& line = history[i];
+
+    //  0   3   6   9  12  15
+    //    3   3   3   3   3
+    //      0   0   0   0
+    std::vector<std::vector<int>> pyramid = {line};
+    auto currentPyramidLine = line;
+    bool allZeroes = std::all_of(
+        currentPyramidLine.begin(),
+        currentPyramidLine.end(),
+        [](int i) { return i == 0; }
+    );
+
+    while (!allZeroes) {
+      std::vector<int> nextLine = {};
+
+      for (int j = 0; j < currentPyramidLine.size() - 1; j += 1) {
+        auto left = currentPyramidLine[j];
+        auto right = currentPyramidLine[j + 1];
+
+        nextLine.push_back({right - left});
+      }
+
+      pyramid.push_back(nextLine);
+      currentPyramidLine = nextLine;
+      allZeroes = std::all_of(
+          currentPyramidLine.begin(),
+          currentPyramidLine.end(),
+          [](int i) { return i == 0; }
+      );
+    }
+
+    //    0   3   6   9  12  15   B
+    //      3   3   3   3   3   A
+    //        0   0   0   0   0
+    auto pyramidWithPredictedValues = pyramid;
+    // loop bottom up add last value on current line with last value on previous
+    // line
+    for (int j = pyramid.size() - 1; j > 0; j -= 1) {
+      auto& currentLine = pyramid[j];
+      auto& previousLine = pyramid[j - 1];
+
+      auto firstValueCurrentLine = currentLine[0];
+      auto firstValuePreviousLine = previousLine[0];
+
+      previousLine.insert(
+          previousLine.begin(),
+          {firstValuePreviousLine - firstValueCurrentLine}
+      );
+      pyramidWithPredictedValues[j - 1] = previousLine;
+    }
+
+    auto firstLinePyramidWithPredictedValues = pyramidWithPredictedValues[0];
+    auto predictedValue = firstLinePyramidWithPredictedValues[0];
+
+    predictedValues.push_back(predictedValue);
+  }
+
+  auto predictedValuesSum =
+      std::accumulate(predictedValues.begin(), predictedValues.end(), 0);
+
+  return predictedValuesSum;
 }
