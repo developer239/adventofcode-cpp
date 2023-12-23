@@ -4,9 +4,12 @@
 #include "src/ReadInput.cpp"
 
 struct Galaxy {
-  int id;
-  int row;
-  int col;
+  long long id;
+  long long row;
+  long long col;
+
+  long long offsetRow;
+  long long offsetCol;
 };
 
 struct StarMap {
@@ -17,16 +20,16 @@ struct StarMap {
   StarMap() = default;
 
   void ExpandMap() {
-    for (int row = 0; row < map.size(); row++) {
+    for (long long row = 0; row < map.size(); row++) {
       if (IsLineEmpty(row)) {
         map.insert(map.begin() + row + 1, map[row]);
         row++;
       }
     }
 
-    for (int col = 0; col < map[0].size(); col++) {
+    for (long long col = 0; col < map[0].size(); col++) {
       if (IsColumnEmpty(col)) {
-        for (int row = 0; row < map.size(); row++) {
+        for (long long row = 0; row < map.size(); row++) {
           map[row].insert(map[row].begin() + col + 1, map[row][col]);
         }
         col++;
@@ -34,8 +37,47 @@ struct StarMap {
     }
   }
 
-  bool IsLineEmpty(int row) const {
-    for (int col = 0; col < map[row].size(); col++) {
+  void ExpandMapPart2() {
+    long long offset = 1000000-1;
+
+    long long cumulativeRowOffset = 0;
+    long long cumulativeColOffset = 0;
+
+    for (long long row = 0; row < map.size(); row++) {
+      if (IsLineEmpty(row)) {
+        cumulativeRowOffset += offset;
+      } else {
+        OffsetAllGalaxiesAtRow(row, cumulativeRowOffset);
+      }
+    }
+
+    for (long long col = 0; col < map[0].size(); col++) {
+      if (IsColumnEmpty(col)) {
+        cumulativeColOffset += offset;
+      } else {
+        OffsetAllGalaxiesAtCol(col, cumulativeColOffset);
+      }
+    }
+  }
+
+  void OffsetAllGalaxiesAtRow(long long row, long long offset) {
+    for (auto& galaxy : galaxies) {
+      if (galaxy.row == row) {
+        galaxy.offsetRow = galaxy.row + offset;
+      }
+    }
+  }
+
+  void OffsetAllGalaxiesAtCol(long long col, long long offset) {
+    for (auto& galaxy : galaxies) {
+      if (galaxy.col == col) {
+        galaxy.offsetCol = galaxy.col + offset;
+      }
+    }
+  }
+
+  bool IsLineEmpty(long long row) const {
+    for (long long col = 0; col < map[row].size(); col++) {
       if (map[row][col] != '.') {
         return false;
       }
@@ -44,8 +86,8 @@ struct StarMap {
     return true;
   }
 
-  bool IsColumnEmpty(int col) const {
-    for (int row = 0; row < map.size(); row++) {
+  bool IsColumnEmpty(long long col) const {
+    for (long long row = 0; row < map.size(); row++) {
       if (map[row][col] != '.') {
         return false;
       }
@@ -55,11 +97,11 @@ struct StarMap {
   }
 
   void FindGalaxies() {
-    for (int row = 0; row < map.size(); row++) {
-      for (int col = 0; col < map[row].size(); col++) {
+    for (long long row = 0; row < map.size(); row++) {
+      for (long long col = 0; col < map[row].size(); col++) {
         if (map[row][col] == '#') {
           galaxies.push_back(
-              Galaxy{static_cast<int>(galaxies.size() + 1), row, col}
+              Galaxy{static_cast<long long>(galaxies.size() + 1), row, col}
           );
         }
       }
@@ -67,29 +109,25 @@ struct StarMap {
   }
 
   void FindAllPairs() {
-    for (int i = 0; i < galaxies.size(); i++) {
-      for (int j = i + 1; j < galaxies.size(); j++) {
+    for (long long i = 0; i < galaxies.size(); i++) {
+      for (long long j = i + 1; j < galaxies.size(); j++) {
         pairs.push_back(std::make_pair(galaxies[i], galaxies[j]));
       }
     }
   }
 
-  int FindShortestPath(Galaxy firstGalaxy, Galaxy secondGalaxy) {
-    int rowDistance = std::abs(firstGalaxy.row - secondGalaxy.row);
-    int colDistance = std::abs(firstGalaxy.col - secondGalaxy.col);
+  long long FindShortestPath(Galaxy firstGalaxy, Galaxy secondGalaxy) {
+    long long rowDistance = std::abs(firstGalaxy.row - secondGalaxy.row);
+    long long colDistance = std::abs(firstGalaxy.col - secondGalaxy.col);
 
-    int pathLength = 0;
-    while(rowDistance > 0 || colDistance > 0) {
-      if(rowDistance > colDistance) {
-        rowDistance--;
-        pathLength++;
-      } else {
-        colDistance--;
-        pathLength++;
-      }
-    }
+    return rowDistance + colDistance;
+  }
 
-    return pathLength;
+  long long FindShortestPathPart2(Galaxy firstGalaxy, Galaxy secondGalaxy) {
+    long long rowDistance = std::abs(firstGalaxy.offsetRow - secondGalaxy.offsetRow);
+    long long colDistance = std::abs(firstGalaxy.offsetCol - secondGalaxy.offsetCol);
+
+    return rowDistance + colDistance;
   }
 
   void LogMap() const {
@@ -103,8 +141,7 @@ struct StarMap {
 
   void LogGalaxies() const {
     for (auto& galaxy : galaxies) {
-      std::cout << "Galaxy " << galaxy.id << " at (" << galaxy.row << ", "
-                << galaxy.col << ")" << std::endl;
+      std::cout << "Galaxy " << galaxy.id << " at (" << galaxy.offsetRow << ", " << galaxy.offsetCol << ")" << std::endl;
     }
   }
 };
@@ -113,7 +150,7 @@ StarMap ParseInput(const std::string& filename) {
   auto lines = ReadInput<std::string>(filename);
   StarMap map;
 
-  for (int row = 0; row < lines.size(); row++) {
+  for (long long row = 0; row < lines.size(); row++) {
     if (!lines[row].has_value()) {
       continue;
     }
@@ -121,7 +158,7 @@ StarMap ParseInput(const std::string& filename) {
     auto lineValue = lines[row].value();
 
     std::vector<char> rowTiles = {};
-    for (int col = 0; col < lineValue.size(); col++) {
+    for (long long col = 0; col < lineValue.size(); col++) {
       rowTiles.push_back(lineValue[col]);
     }
 
@@ -131,7 +168,7 @@ StarMap ParseInput(const std::string& filename) {
   return map;
 }
 
-int runPart1(const std::string& filename) {
+long long runPart1(const std::string& filename) {
   auto map = ParseInput(filename);
   map.ExpandMap();
   map.LogMap();
@@ -139,21 +176,39 @@ int runPart1(const std::string& filename) {
   map.LogGalaxies();
   map.FindAllPairs();
 
-//  auto shortestPathOneSeven = map.FindShortestPath(map.galaxies[0], map.galaxies[6]);
-//  auto shortestPathThreeSix = map.FindShortestPath(map.galaxies[2], map.galaxies[5]);
-//  auto shortestPathEightNine = map.FindShortestPath(map.galaxies[7], map.galaxies[8]);
-//  auto shortestPathFiveNine = map.FindShortestPath(map.galaxies[4], map.galaxies[8]);
+  //  auto shortestPathOneSeven = map.FindShortestPath(map.galaxies[0],
+  //  map.galaxies[6]); auto shortestPathThreeSix =
+  //  map.FindShortestPath(map.galaxies[2], map.galaxies[5]); auto
+  //  shortestPathEightNine = map.FindShortestPath(map.galaxies[7],
+  //  map.galaxies[8]); auto shortestPathFiveNine =
+  //  map.FindShortestPath(map.galaxies[4], map.galaxies[8]);
 
-  int distancesSum = 0;
-  for(auto& pair : map.pairs) {
+  long long distancesSum = 0;
+  for (auto& pair : map.pairs) {
     distancesSum += map.FindShortestPath(pair.first, pair.second);
   }
 
   return distancesSum;
 }
 
-int runPart2(const std::string& filename) {
-  auto result = 0;
+long long runPart2(const std::string& filename) {
+  auto map = ParseInput(filename);
+  map.FindGalaxies();
+  map.ExpandMapPart2();
+  map.FindAllPairs();
+  map.LogGalaxies();
 
-  return result;
+  //  auto shortestPathOneSeven = map.FindShortestPath(map.galaxies[0],
+  //  map.galaxies[6]); auto shortestPathThreeSix =
+  //  map.FindShortestPath(map.galaxies[2], map.galaxies[5]); auto
+  //  shortestPathEightNine = map.FindShortestPath(map.galaxies[7],
+  //  map.galaxies[8]); auto shortestPathFiveNine =
+  //  map.FindShortestPath(map.galaxies[4], map.galaxies[8]);
+
+  long long distancesSum = 0;
+  for (auto& pair : map.pairs) {
+    distancesSum += map.FindShortestPathPart2(pair.first, pair.second);
+  }
+
+  return distancesSum;
 }
