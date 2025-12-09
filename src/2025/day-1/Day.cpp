@@ -1,5 +1,3 @@
-#include <numeric>
-
 #include "src/LogVectorLines.cpp"
 #include "src/ReadInput.cpp"
 #include "src/SplitString.cpp"
@@ -20,7 +18,7 @@ int runPart1(const std::string& filename) {
   auto lines = ReadInput<std::string>(filename);
   for (auto line : lines) {
     if (line.has_value()) {
-      auto lineValue = line.value();
+      const auto& lineValue = line.value();
 
       const auto direction = lineValue.at(0);
       auto value = lineValue.substr(1, lineValue.length());
@@ -40,10 +38,10 @@ int runPart1(const std::string& filename) {
   }
 
   for (auto safeInput : safeInputs) {
-    const auto result1 = dialPointer + safeInput % dialMaximum;
-    const auto result2 = result1 % dialMaximum;
+    const auto result1 = (dialPointer + safeInput) % dialMaximum;
+    const auto result2 = (result1 + dialMaximum) % dialMaximum;
 
-    dialPointer = result2 < 0 ? dialMaximum + result2 : result2;
+    dialPointer = result2;
 
     if (dialPointer == 0) {
       numberOfTimesDialIsPointingZero += 1;
@@ -57,19 +55,12 @@ int runPart2(const std::string& filename) {
   const int dialMaximum = 100;
   int dialPointer = 50;
   int numberOfTimesDialPassedZero = 0;
-  std::vector<int> safeInputs = {
-      /*
-      -68
-      -30
-      +48
-      ...
-      */
-  };
+  std::vector<int> safeInputs;
 
-  auto lines = ReadInput<std::string>(filename);
+  const auto lines = ReadInput<std::string>(filename);
   for (auto line : lines) {
     if (line.has_value()) {
-      auto lineValue = line.value();
+      const auto& lineValue = line.value();
 
       const auto direction = lineValue.at(0);
       auto value = lineValue.substr(1, lineValue.length());
@@ -88,14 +79,25 @@ int runPart2(const std::string& filename) {
     }
   }
 
-  for (auto safeInput : safeInputs) {
-    const auto result1 = dialPointer + safeInput % dialMaximum;
-    const auto result2 = result1 % dialMaximum;
+  for (const auto safeInput : safeInputs) {
+    const auto result1 = (dialPointer + safeInput) % dialMaximum;
+    const auto result2 = (result1 + dialMaximum) % dialMaximum;
 
-    int a = (dialPointer + safeInput) / dialMaximum;
-    numberOfTimesDialPassedZero += a;
+    numberOfTimesDialPassedZero += std::abs(safeInput) / dialMaximum;
 
-    dialPointer = result2 < 0 ? dialMaximum + result2 : result2;
+    if (dialPointer > 0) {
+      const int rawPosition = dialPointer + (safeInput % dialMaximum);
+
+      if (rawPosition <= 0) {
+        numberOfTimesDialPassedZero++;
+      }
+
+      if (std::abs(rawPosition) >= dialMaximum) {
+        numberOfTimesDialPassedZero++;
+      }
+    }
+
+    dialPointer = result2;
   }
 
   return numberOfTimesDialPassedZero;
