@@ -1,4 +1,4 @@
-# Advent of code 2022
+# Advent of code
 
 You can find the [challenge information here](https://adventofcode.com/). 🎄
 
